@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, height=600, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
+    <title>Coin Cubby — Secure Storage Made Easy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div id="kiosk-app">
+        <!-- === HEADER (injected dynamically) === -->
+        <header id="app-header" class="app-header hidden">
+            <div class="header-left">
+                <button id="header-back-btn" class="header-icon-btn hidden" aria-label="Go back">
+                    <span class="material-icons-round">arrow_back</span>
+                </button>
+                <div class="header-brand">
+                    <div class="brand-icon">
+                        <span class="material-icons-round">lock</span>
+                    </div>
+                    <h1 id="header-title" class="header-title">Coin Cubby</h1>
+                </div>
+            </div>
+            <div class="header-center">
+                <div id="header-clock" class="header-clock">07:09 PM</div>
+                <div id="header-date" class="header-date">Sat, Jul 4</div>
+            </div>
+            <div class="header-right">
+                <div id="header-user-info" class="header-user-info hidden">
+                    <span class="user-info-label">User ID</span>
+                    <span id="header-user-code" class="user-info-code">123456</span>
+                </div>
+                <button id="header-home-btn" class="header-icon-btn" aria-label="Home">
+                    <span class="material-icons-round">home</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- === STEPPER (injected dynamically) === -->
+        <div id="stepper-container" class="stepper-container hidden"></div>
+
+        <!-- === SCREEN CONTAINER === -->
+        <main id="screen-container" class="screen-container">
+
+            <!-- SCREEN: Dashboard -->
+            <section id="screen-dashboard" class="screen active">
+                <div class="dashboard-content">
+                    <div class="dashboard-logo">
+                        <div class="logo-icon-large">
+                            <span class="material-icons-round">lock</span>
+                        </div>
+                        <h1 class="dashboard-title">Coin Cubby</h1>
+                        <p class="dashboard-subtitle">Secure Storage Made Easy</p>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button id="btn-rent" class="btn-action btn-rent" onclick="App.navigate('login', {flow: 'rent'})">
+                            <span class="material-icons-round">inventory_2</span>
+                            <span>RENT</span>
+                        </button>
+                        <button id="btn-retrieve" class="btn-action btn-retrieve" onclick="App.navigate('retrieve-login', {flow: 'retrieve'})">
+                            <span class="material-icons-round">lock_open</span>
+                            <span>RETRIEVE</span>
+                        </button>
+                    </div>
+                    <p class="dashboard-hint">Touch a button to begin</p>
+                </div>
+            </section>
+
+            <!-- SCREEN: Login (Rent Flow) -->
+            <section id="screen-login" class="screen">
+                <div class="screen-body split-layout">
+                    <div class="login-form">
+                        <div class="input-group input-group-active" id="userid-group">
+                            <label class="input-label">USER ID</label>
+                            <div class="digit-boxes" id="userid-boxes" data-length="6"></div>
+                        </div>
+                        <div class="input-group" id="pin-group">
+                            <label>ENTER 6-DIGIT PASSWORD</label>
+                            <div class="digit-boxes" id="pin-boxes"></div>
+                        </div>
+                        <div class="login-buttons">
+                            <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                            <button id="btn-login-continue" class="btn btn-primary" onclick="LoginScreen.submit()">CONTINUE</button>
+                        </div>
+                        <div class="login-register">
+                            <p>Don't have an account yet?</p>
+                            <a href="#" id="link-register" onclick="App.navigate('create-account')">REGISTER ACCOUNT</a>
+                        </div>
+                    </div>
+                    <!-- On-screen numpad -->
+                    <div id="numpad-rent" class="numpad-container"></div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Create Account (QR Code) -->
+            <section id="screen-create-account" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center">
+                        <div class="icon-circle icon-circle-green-light">
+                            <span class="material-icons-round">smartphone</span>
+                        </div>
+                        <h2 class="card-title">Scan to Register</h2>
+                        <p class="card-subtitle">Scan this QR Code to create your Coin Cubby account.</p>
+                        <div id="qr-code-container" class="qr-code-container"></div>
+                        <p class="card-link">coincubby.vercel.app/#/register</p>
+                    </div>
+                    <button class="btn btn-outline btn-full" onclick="App.goBack()">BACK</button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Account Overview -->
+            <section id="screen-account" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center">
+                        <div class="account-row">
+                            <div class="icon-circle icon-circle-green">
+                                <span class="material-icons-round">person</span>
+                            </div>
+                            <div class="account-info">
+                                <span class="account-label">USER ID</span>
+                                <span id="account-user-code" class="account-value">123456</span>
+                            </div>
+                        </div>
+                        <hr class="divider">
+                        <div class="account-row">
+                            <div class="icon-circle icon-circle-green-light">
+                                <span class="material-icons-round">account_balance_wallet</span>
+                            </div>
+                            <div class="account-info">
+                                <span class="account-label">Wallet Balance</span>
+                                <span id="account-balance" class="account-value account-value-green">₱325.00</span>
+                            </div>
+                        </div>
+                        <hr class="divider">
+                        <div class="account-row">
+                            <div class="icon-circle icon-circle-orange">
+                                <span class="material-icons-round">inventory_2</span>
+                            </div>
+                            <div class="account-info">
+                                <span class="account-label">Active Rentals</span>
+                                <div class="account-rentals">
+                                    <span id="account-rental-count" class="account-value">1</span>
+                                    <span class="account-rental-max">/ 3 Used</span>
+                                    <div id="account-rental-dots" class="rental-dots"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="login-buttons">
+                        <button class="btn btn-outline" onclick="App.navigate('dashboard')">RETURN HOME</button>
+                        <button class="btn btn-primary" id="btn-select-cubby" onclick="App.navigate('select-compartment')">SELECT CUBBY</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Select Compartment -->
+            <section id="screen-select-compartment" class="screen">
+                <div class="screen-body screen-body-full comp-screen-layout">
+                    <!-- Legend bar -->
+                    <div class="comp-legend-bar">
+                        <span class="legend-item"><span class="legend-dot legend-available"></span> Available</span>
+                        <span class="legend-item"><span class="legend-dot legend-occupied"></span> Occupied</span>
+                        <span class="legend-item"><span class="legend-dot legend-maintenance"></span> Maintenance</span>
+                    </div>
+
+                    <!-- Scrollable center area with white card -->
+                    <div class="comp-center-area">
+                        <div class="comp-card-wrapper">
+                            <!-- Module header inside card -->
+                            <div class="module-title-box">
+                                <div class="module-circle" id="module-circle-id">1</div>
+                                <div class="module-title-text">
+                                    <div class="module-name" id="module-name-title">CoinCubby</div>
+                                    <div class="module-avail" id="module-avail-count">0 available</div>
+                                </div>
+                            </div>
+                            <!-- Compartment grid -->
+                            <div id="compartment-grid" class="compartment-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Footer pinned to bottom -->
+                    <div class="comp-bottom-bar">
+                        <div class="compartment-footer">
+                            <button id="btn-prev-module" class="btn btn-text" onclick="CompartmentScreen.prevModule()">
+                                <span class="material-icons-round">chevron_left</span> PREV
+                            </button>
+                            <span id="module-page" class="module-page">1 / 2</span>
+                            <button id="btn-next-module" class="btn btn-text" onclick="CompartmentScreen.nextModule()">
+                                NEXT <span class="material-icons-round">chevron_right</span>
+                            </button>
+                        </div>
+                        <button id="btn-confirm-compartment" class="btn btn-primary btn-confirm-selection" onclick="CompartmentScreen.confirm()" disabled>CONFIRM SELECTION</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Choose Rental Type -->
+            <section id="screen-rental-type" class="screen">
+                <div class="screen-body">
+                    <div class="rental-type-badge" id="rental-type-compartment">Compartment: A01</div>
+                    <button class="card card-option card-option-green" id="btn-fixed-duration" onclick="App.navigate('fixed-duration')">
+                        <div class="icon-circle icon-circle-green-light">
+                            <span class="material-icons-round">schedule</span>
+                        </div>
+                        <div class="option-text">
+                            <strong>Fixed Duration</strong>
+                            <span>Select a specific rental period</span>
+                        </div>
+                    </button>
+                    <button class="card card-option card-option-orange" id="btn-open-time" onclick="App.navigate('open-time')">
+                        <div class="icon-circle icon-circle-orange">
+                            <span class="material-icons-round">timer</span>
+                        </div>
+                        <div class="option-text">
+                            <strong>Open Time</strong>
+                            <span>Pay based on actual storage duration</span>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline btn-full" onclick="App.goBack()">BACK</button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Fixed Duration -->
+            <section id="screen-fixed-duration" class="screen">
+                <div class="screen-body screen-body-full">
+                    <div class="duration-header">
+                        <span id="duration-compartment" class="compartment-badge">Compartment: A04</span>
+                        <span class="duration-type-label">Fixed Duration</span>
+                    </div>
+                    <div id="duration-grid" class="duration-grid"></div>
+                    <div class="duration-footer">
+                        <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                        <button id="btn-confirm-duration" class="btn btn-primary" onclick="FixedDurationScreen.confirm()" disabled>CONFIRM</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Open Time Rental -->
+            <section id="screen-open-time" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center">
+                        <div class="icon-circle icon-circle-orange-light icon-circle-lg">
+                            <span class="material-icons-round">timer</span>
+                        </div>
+                        <h2 class="card-title">Open Time Rental</h2>
+                        <div id="open-time-compartment" class="compartment-badge-inline">Compartment: A01</div>
+                        <p class="card-description">Charges are based on actual storage duration. Payment will be calculated upon retrieval.</p>
+                        <div class="rate-box">
+                            <div class="rate-label">
+                                <span class="material-icons-round">info_outline</span>
+                                CURRENT RATE
+                            </div>
+                            <div class="rate-amount">₱<span id="open-time-rate">10</span> <span class="rate-unit">per hour</span></div>
+                            <div class="rate-service">+ ₱<span id="open-time-service">5</span> service fee</div>
+                        </div>
+                    </div>
+                    <div class="login-buttons">
+                        <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                        <button class="btn btn-primary" onclick="OpenTimeScreen.confirm()">CONTINUE</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Payment Method -->
+            <section id="screen-payment-method" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center" id="payment-summary-card">
+                        <div class="summary-row summary-row-header">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round icon-green">inventory_2</span>
+                                <span class="summary-label text-green">Compartment</span>
+                            </div>
+                            <span id="payment-compartment" class="summary-value">A04</span>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round icon-gray">schedule</span>
+                                <span class="summary-label">Rental Type</span>
+                            </div>
+                            <span id="payment-rental-type" class="summary-value">Fixed Duration</span>
+                        </div>
+                        <div class="summary-row" id="payment-duration-row">
+                            <span class="summary-label">Duration</span>
+                            <span id="payment-duration" class="summary-value">3h</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Rental Fee</span>
+                            <span id="payment-rental-fee" class="summary-value">₱25</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Service Fee</span>
+                            <span id="payment-service-fee" class="summary-value">₱5</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="summary-row summary-row-total">
+                            <span class="summary-label"><strong>Total Due</strong></span>
+                            <span id="payment-total" class="summary-value summary-value-green"><strong>₱30</strong></span>
+                        </div>
+                    </div>
+                    <h3 class="section-title">Choose Payment Method</h3>
+                    <button class="card card-option card-option-green" onclick="App.navigate('wallet-payment')">
+                        <div class="icon-circle icon-circle-green-light">
+                            <span class="material-icons-round">account_balance_wallet</span>
+                        </div>
+                        <div class="option-text">
+                            <strong>Wallet Balance</strong>
+                            <span>Pay from your account wallet</span>
+                        </div>
+                    </button>
+                    <button class="card card-option card-option-orange" onclick="App.navigate('cash-payment')">
+                        <div class="icon-circle icon-circle-orange">
+                            <span class="material-icons-round">payments</span>
+                        </div>
+                        <div class="option-text">
+                            <strong>Cash</strong>
+                            <span>Insert coins or bills</span>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline btn-full" onclick="App.goBack()">BACK</button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Wallet Payment -->
+            <section id="screen-wallet-payment" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center">
+                        <div class="icon-circle icon-circle-green-light icon-circle-lg">
+                            <span class="material-icons-round">account_balance_wallet</span>
+                        </div>
+                        <div class="wallet-row">
+                            <span>Amount Due</span>
+                            <span id="wallet-amount-due" class="wallet-value">₱30.00</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="wallet-row">
+                            <span>Wallet Balance</span>
+                            <span id="wallet-balance" class="wallet-value">₱325.00</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="wallet-row wallet-row-highlight">
+                            <span>Remaining Balance</span>
+                            <span id="wallet-remaining" class="wallet-value wallet-value-green">₱295.00</span>
+                        </div>
+                    </div>
+                    <div class="login-buttons">
+                        <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                        <button id="btn-wallet-confirm" class="btn btn-primary" onclick="WalletPaymentScreen.confirm()">
+                            <span class="material-icons-round">check_circle</span> CONFIRM
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Cash Payment -->
+            <section id="screen-cash-payment" class="screen">
+                <div class="screen-body screen-body-full">
+                    <div class="cash-summary">
+                        <div class="cash-stat">
+                            <span class="cash-stat-label">Amount Due</span>
+                            <span id="cash-amount-due" class="cash-stat-value">₱50.00</span>
+                        </div>
+                        <div class="cash-stat">
+                            <span class="cash-stat-label">Inserted</span>
+                            <span id="cash-inserted" class="cash-stat-value cash-stat-orange">₱0.00</span>
+                        </div>
+                        <div class="cash-stat">
+                            <span class="cash-stat-label">Remaining</span>
+                            <span id="cash-remaining" class="cash-stat-value cash-stat-red">₱50.00</span>
+                        </div>
+                    </div>
+                    <div class="cash-progress-bar">
+                        <div id="cash-progress" class="cash-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p class="cash-hint">Insert coins or bills into the machine</p>
+                    <div class="cash-denominations">
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green">monetization_on</span>
+                            <span class="denom-value">₱1</span>
+                        </div>
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green">monetization_on</span>
+                            <span class="denom-value">₱5</span>
+                        </div>
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green">monetization_on</span>
+                            <span class="denom-value">₱10</span>
+                        </div>
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green-dark">payments</span>
+                            <span class="denom-value">₱20</span>
+                        </div>
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green-dark">payments</span>
+                            <span class="denom-value">₱50</span>
+                        </div>
+                        <div class="denom-card">
+                            <span class="material-icons-round icon-green-dark">payments</span>
+                            <span class="denom-value">₱100</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-full" onclick="CashPaymentScreen.cancel()">CANCEL</button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Rental Confirmed -->
+            <section id="screen-rental-confirmed" class="screen">
+                <div class="screen-body">
+                    <div class="success-icon">
+                        <span class="material-icons-round">check_circle</span>
+                    </div>
+                    <h2 class="success-title">Rental Confirmed!</h2>
+                    <div class="card card-center">
+                        <div class="summary-row summary-row-header">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round icon-green">inventory_2</span>
+                                <span class="summary-label text-green">Compartment</span>
+                            </div>
+                            <span id="confirmed-compartment" class="summary-value summary-value-green">A04</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Rental Type</span>
+                            <span id="confirmed-rental-type" class="summary-value">Fixed Duration</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Retrieval Time</span>
+                            <span id="confirmed-retrieval-time" class="summary-value">Jul 05, 2026 01:27 AM</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-open-compartment" onclick="RentalConfirmedScreen.openCompartment()">
+                        <span class="material-icons-round">meeting_room</span> OPEN COMPARTMENT
+                    </button>
+                </div>
+            </section>
+
+            <!-- ====== RETRIEVE FLOW ====== -->
+
+            <!-- SCREEN: Retrieve Login -->
+            <section id="screen-retrieve-login" class="screen">
+                <div class="screen-body split-layout">
+                    <div class="login-form">
+                        <div class="input-group input-group-active" id="retrieve-userid-group">
+                            <label class="input-label">USER ID</label>
+                            <div class="digit-boxes" id="retrieve-userid-boxes" data-length="6"></div>
+                        </div>
+                        <div class="input-group" id="retrieve-pin-group">
+                            <label>ENTER 6-DIGIT PASSWORD</label>
+                            <div class="digit-boxes" id="retrieve-pin-boxes"></div>
+                        </div>
+                        <div class="login-buttons">
+                            <button class="btn btn-outline" onclick="App.navigate('dashboard')">BACK</button>
+                            <button id="btn-retrieve-login" class="btn btn-primary" onclick="RetrieveLoginScreen.submit()">CONTINUE</button>
+                        </div>
+                        <div class="login-register">
+                            <p>Don't have an account yet?</p>
+                            <a href="#" onclick="App.navigate('create-account')">REGISTER ACCOUNT</a>
+                        </div>
+                    </div>
+                    <div id="numpad-retrieve" class="numpad-container"></div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Active Rentals -->
+            <section id="screen-active-rentals" class="screen">
+                <div class="screen-body screen-body-full">
+                    <div id="active-rentals-list" class="active-rentals-list"></div>
+                    <div class="compartment-footer">
+                        <button class="btn btn-text" disabled>
+                            <span class="material-icons-round">chevron_left</span> PREV
+                        </button>
+                        <span id="rentals-page" class="module-page">1 / 1</span>
+                        <button class="btn btn-text" disabled>
+                            NEXT <span class="material-icons-round">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Retrieval Payment -->
+            <section id="screen-retrieval-payment" class="screen">
+                <div class="screen-body">
+                    <div class="card card-center">
+                        <div class="summary-row summary-row-header">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round icon-green">inventory_2</span>
+                                <span class="summary-label text-green">Compartment</span>
+                            </div>
+                            <span id="retrieval-compartment" class="summary-value">A04</span>
+                        </div>
+                        <div class="summary-row">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round icon-gray">schedule</span>
+                                <span class="summary-label">Rental Type</span>
+                            </div>
+                            <span id="retrieval-rental-type" class="summary-value">Fixed Duration</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Start Time</span>
+                            <span id="retrieval-start-time" class="summary-value">Jul 04, 11:06 PM</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Total Duration</span>
+                            <span id="retrieval-duration" class="summary-value">1 hour</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="summary-row summary-row-total">
+                            <span class="summary-label"><strong>Amount Due</strong></span>
+                            <span id="retrieval-amount-due" class="summary-value summary-value-green"><strong>₱0.00</strong></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open" onclick="RetrievalPaymentScreen.openCompartment()">
+                        <span class="material-icons-round">check_circle</span> OPEN COMPARTMENT
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Retrieval Ready -->
+            <section id="screen-retrieval-ready" class="screen">
+                <div class="screen-body">
+                    <div class="success-icon">
+                        <span class="material-icons-round">check_circle</span>
+                    </div>
+                    <h2 class="success-title">Payment Confirmed</h2>
+                    <div class="retrieval-ready-info">
+                        <span class="material-icons-round icon-green">inventory_2</span>
+                        <span>Compartment <strong id="retrieval-ready-code" class="text-green">A04</strong> is ready</span>
+                    </div>
+                    <button class="btn btn-primary btn-full btn-open-compartment" onclick="RetrievalReadyScreen.openCompartment()">
+                        <span class="material-icons-round">meeting_room</span> OPEN COMPARTMENT
+                    </button>
+                </div>
+            </section>
+
+        </main>
+        <!-- === TIMEOUT OVERLAY === -->
+        <div id="timeout-overlay" class="timeout-overlay hidden">
+            <div class="timeout-modal">
+                <div class="timeout-text">Returning to Home in</div>
+                <div id="timeout-counter" class="timeout-counter">15</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/components/header.js"></script>
+    <script src="/static/js/components/stepper.js"></script>
+    <script src="/static/js/components/numpad.js"></script>
+    <script src="/static/js/screens/dashboard.js"></script>
+    <script src="/static/js/screens/login.js"></script>
+    <script src="/static/js/screens/create-account.js"></script>
+    <script src="/static/js/screens/account.js"></script>
+    <script src="/static/js/screens/select-compartment.js"></script>
+    <script src="/static/js/screens/rental-type.js"></script>
+    <script src="/static/js/screens/fixed-duration.js"></script>
+    <script src="/static/js/screens/open-time.js"></script>
+    <script src="/static/js/screens/payment-method.js"></script>
+    <script src="/static/js/screens/wallet-payment.js"></script>
+    <script src="/static/js/screens/cash-payment.js"></script>
+    <script src="/static/js/screens/rental-confirmed.js"></script>
+    <script src="/static/js/screens/retrieve-login.js"></script>
+    <script src="/static/js/screens/active-rentals.js"></script>
+    <script src="/static/js/screens/retrieval-payment.js"></script>
+    <script src="/static/js/screens/retrieval-ready.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
