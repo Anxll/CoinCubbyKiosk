@@ -7,7 +7,6 @@ window.OpenTimeScreen = {
         try {
             const pricing = await Api.getPricing(AppState.selectedCompartment.id);
             document.getElementById('open-time-rate').innerText = pricing.rate_per_hour;
-            document.getElementById('open-time-service').innerText = pricing.service_fee;
             AppState.rentalPricing = pricing;
         } catch (e) {
             console.error(e);

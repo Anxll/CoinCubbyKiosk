@@ -28,6 +28,7 @@ window.WalletPaymentScreen = {
         const btn = document.getElementById('btn-wallet-confirm');
         btn.disabled = true;
         btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> PROCESSING...';
+        AppState.paymentMethod = 'wallet';
 
         try {
             if (AppState.flow === 'rent') {
@@ -41,7 +42,7 @@ window.WalletPaymentScreen = {
                 App.navigate('rental-confirmed', { paymentMethod: 'wallet' });
             } else {
                 // Retrieval flow
-                const res = await Api.retrieveRental(AppState.selectedRental.id, 'wallet');
+                const res = await Api.retrieveRental(AppState.selectedRental.id, 'wallet', AppState.user.id);
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {

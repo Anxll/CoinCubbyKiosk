@@ -4,11 +4,13 @@ Compartment listing and status routes.
 from flask import Blueprint, request, jsonify, current_app
 from ..services.supabase_client import get_supabase
 from ..config import Config
+from ..services.kiosk_security import require_kiosk_token
 
 compartments_bp = Blueprint('compartments', __name__)
 
 
 @compartments_bp.route('/', methods=['GET'])
+@require_kiosk_token
 def list_compartments():
     """List all lockers for this specific kiosk device, optionally filtered by module."""
     module_name = request.args.get('module')
@@ -40,7 +42,9 @@ def list_compartments():
         for l in result.data:
             # Get the rate for this size type
             rate_res = db.table('rates').select('price_per_hour').eq('size_type_id', l['size_type_id']).execute()
-            price_per_hour = float(rate_res.data[0]['price_per_hour']) if rate_res.data else 0.00
+            if not rate_res.data:
+                return jsonify({'error': f'Rate not configured for size type {l["size_type_id"]}'}), 500
+            price_per_hour = float(rate_res.data[0]['price_per_hour'])
             
             # Module name is a smallint (1, 2, etc.) — use it as-is
             mod_val = str(l['modules']['name']) if l['modules'] else '1'
@@ -64,6 +68,7 @@ def list_compartments():
 
 
 @compartments_bp.route('/<code>', methods=['GET'])
+@require_kiosk_token
 def get_compartment(code):
     """Get a single locker by its code."""
     try:
@@ -88,7 +93,9 @@ def get_compartment(code):
         l = result.data[0]
         
         rate_res = db.table('rates').select('price_per_hour').eq('size_type_id', l['size_type_id']).execute()
-        price_per_hour = float(rate_res.data[0]['price_per_hour']) if rate_res.data else 0.00
+        if not rate_res.data:
+            return jsonify({'error': f'Rate not configured for size type {l["size_type_id"]}'}), 500
+        price_per_hour = float(rate_res.data[0]['price_per_hour'])
         
         mod_val = str(l['modules']['name']) if l['modules'] else '1'
 

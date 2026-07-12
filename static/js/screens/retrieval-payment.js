@@ -20,7 +20,7 @@ window.RetrievalPaymentScreen = {
     },
     
     openCompartment() {
-        // Uses the same payment method screen but knows we are in retrieve flow
+        // Continue into payment method selection for retrieval flow
         App.navigate('payment-method');
     }
 };

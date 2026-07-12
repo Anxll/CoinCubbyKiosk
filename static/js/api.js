@@ -1,12 +1,18 @@
 const API_BASE = '/api';
 
 class ApiClient {
+    static getKioskToken() {
+        const meta = document.querySelector('meta[name="kiosk-api-token"]');
+        return meta ? meta.content : '';
+    }
+
     static async request(endpoint, options = {}) {
         try {
             const response = await fetch(`${API_BASE}${endpoint}`, {
                 ...options,
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-Kiosk-Token': this.getKioskToken(),
                     ...options.headers
                 }
             });
@@ -53,10 +59,17 @@ class ApiClient {
         return this.request(`/rentals/active/${userId}`);
     }
 
-    static async retrieveRental(rentalId, paymentMethod = null) {
+    static async retrieveRental(rentalId, paymentMethod = null, userId = null, cashInserted = null) {
+        const body = { payment_method: paymentMethod };
+        if (userId) {
+            body.user_id = userId;
+        }
+        if (cashInserted !== null) {
+            body.cash_inserted = cashInserted;
+        }
         return this.request(`/rentals/${rentalId}/retrieve`, {
             method: 'POST',
-            body: JSON.stringify({ payment_method: paymentMethod })
+            body: JSON.stringify(body)
         });
     }
 
@@ -76,6 +89,17 @@ class ApiClient {
 
     static async stopCash() {
         return this.request('/hardware/cash/stop', { method: 'POST' });
+    }
+
+    static async getCashDebug() {
+        return this.request('/hardware/cash/debug');
+    }
+
+    static async insertCash(amount) {
+        return this.request('/hardware/cash/insert', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+        });
     }
 }
 window.Api = ApiClient;

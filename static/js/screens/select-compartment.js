@@ -124,3 +124,5 @@ window.CompartmentScreen = {
         }
     }
 };
+
+window.SelectCompartmentScreen = window.CompartmentScreen;

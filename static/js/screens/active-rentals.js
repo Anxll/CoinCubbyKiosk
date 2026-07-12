@@ -76,7 +76,7 @@ window.ActiveRentalsScreen = {
 
     async processRetrieval(rental) {
         try {
-            const res = await Api.retrieveRental(rental.id, null);
+            const res = await Api.retrieveRental(rental.id, null, AppState.user.id);
             App.navigate('retrieval-ready', { compartmentCode: res.compartment_code, amountCharged: 0 });
         } catch (e) {
             alert(e.message);

@@ -22,7 +22,7 @@ window.RetrievalReadyScreen = {
         btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> UNLOCKING...';
         
         try {
-            await fetch(`/api/hardware/unlock/${AppState.compartmentCode}`, { method: 'POST' });
+            await Api.request(`/hardware/unlock/${AppState.compartmentCode}`, { method: 'POST' });
             App.navigate('dashboard', {}, true);
         } catch (e) {
             alert(e.message);

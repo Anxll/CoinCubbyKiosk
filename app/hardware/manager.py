@@ -17,6 +17,14 @@ class HardwareManager:
         self.cash_target = 0
         self._inserted_amount = 0
         self._cash_accepting = False
+        self.coin_acceptor_pin = None
+        self.coin_enable_pin = None
+        self.coin_pulse_value = float(config.get('COIN_ACCEPTOR_PULSE_VALUE', 5.0))
+        self.coin_bouncetime_ms = int(config.get('COIN_ACCEPTOR_BOUNCETIME_MS', 30))
+        self.bill_acceptor_pin = None
+        self.bill_enable_pin = None
+        self.bill_pulse_value = float(config.get('BILL_ACCEPTOR_PULSE_VALUE', 10.0))
+        self.bill_bouncetime_ms = int(config.get('BILL_ACCEPTOR_BOUNCETIME_MS', 20))
 
         # Detect if running on Raspberry Pi
         if not self.simulation_mode:
@@ -53,29 +61,35 @@ class HardwareManager:
         coin_pin = config.get('COIN_ACCEPTOR_PIN', 17)
         self.GPIO.setup(coin_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
         self.GPIO.add_event_detect(coin_pin, self.GPIO.FALLING,
-                                    callback=self._coin_pulse_callback, bouncetime=50)
+                                    callback=self._coin_pulse_callback, bouncetime=self.coin_bouncetime_ms)
+        self.coin_acceptor_pin = coin_pin
+        self.coin_enable_pin = config.get('COIN_ACCEPTOR_ENABLE_PIN')
+        if self.coin_enable_pin is not None:
+            self.GPIO.setup(self.coin_enable_pin, self.GPIO.OUT)
+            self.GPIO.output(self.coin_enable_pin, self.GPIO.HIGH)
 
         # Bill acceptor (input with pull-up)
         bill_pin = config.get('BILL_ACCEPTOR_PIN', 27)
         self.GPIO.setup(bill_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
         self.GPIO.add_event_detect(bill_pin, self.GPIO.FALLING,
-                                    callback=self._bill_pulse_callback, bouncetime=100)
+                                    callback=self._bill_pulse_callback, bouncetime=self.bill_bouncetime_ms)
+        self.bill_acceptor_pin = bill_pin
+        self.bill_enable_pin = config.get('BILL_ACCEPTOR_ENABLE_PIN')
+        if self.bill_enable_pin is not None:
+            self.GPIO.setup(self.bill_enable_pin, self.GPIO.OUT)
+            self.GPIO.output(self.bill_enable_pin, self.GPIO.HIGH)
 
     def _coin_pulse_callback(self, channel):
         """Handle coin acceptor pulse (JY-100F)."""
         if self._cash_accepting:
-            # JY-100F sends different pulse counts for different denominations
-            # This needs calibration based on your coin acceptor settings
-            self._inserted_amount += 1  # Default: 1 peso per pulse
-            logger.info(f"Coin detected. Total inserted: ₱{self._inserted_amount}")
+            self._inserted_amount += self.coin_pulse_value
+            logger.info(f"Coin pulse detected (+₱{self.coin_pulse_value}). Total inserted: ₱{self._inserted_amount}")
 
     def _bill_pulse_callback(self, channel):
         """Handle bill acceptor pulse (TB74)."""
         if self._cash_accepting:
-            # TB74 sends pulses based on bill denomination
-            # This needs calibration based on DIP switch settings
-            self._inserted_amount += 20  # Default: 20 peso per pulse
-            logger.info(f"Bill detected. Total inserted: ₱{self._inserted_amount}")
+            self._inserted_amount += self.bill_pulse_value
+            logger.info(f"Bill pulse detected (+₱{self.bill_pulse_value}). Total inserted: ₱{self._inserted_amount}")
 
     # === Compartment mapping ===
     # Maps compartment codes to their GPIO pin indices
@@ -123,6 +137,12 @@ class HardwareManager:
         self._inserted_amount = 0
         self._cash_accepting = True
 
+        if not self.simulation_mode:
+            if self.coin_enable_pin is not None:
+                self.GPIO.output(self.coin_enable_pin, self.GPIO.LOW)
+            if self.bill_enable_pin is not None:
+                self.GPIO.output(self.bill_enable_pin, self.GPIO.LOW)
+
         if self.simulation_mode:
             self.simulator.start_cash_simulation(target_amount)
 
@@ -131,6 +151,12 @@ class HardwareManager:
     def stop_cash_acceptance(self):
         """Disable coin and bill acceptors."""
         self._cash_accepting = False
+
+        if not self.simulation_mode:
+            if self.coin_enable_pin is not None:
+                self.GPIO.output(self.coin_enable_pin, self.GPIO.HIGH)
+            if self.bill_enable_pin is not None:
+                self.GPIO.output(self.bill_enable_pin, self.GPIO.HIGH)
 
         if self.simulation_mode:
             self.simulator.stop_cash_simulation()
@@ -142,6 +168,40 @@ class HardwareManager:
         if self.simulation_mode:
             return self.simulator.get_inserted_amount()
         return self._inserted_amount
+
+    def get_cash_status(self) -> dict:
+        """Return cash acceptor state for kiosk diagnostics."""
+        current_amount = self.get_inserted_amount()
+        overpayment = max(0, current_amount - self.cash_target)
+        return {
+            'simulation_mode': self.simulation_mode,
+            'cash_accepting': self._cash_accepting,
+            'inserted': current_amount,
+            'target': self.cash_target,
+            'remaining': max(0, self.cash_target - current_amount),
+            'overpayment': overpayment,
+            'complete': self.cash_target > 0 and current_amount >= self.cash_target,
+            'coin_acceptor_pin': self.coin_acceptor_pin,
+            'coin_enable_pin': self.coin_enable_pin,
+            'coin_pulse_value': self.coin_pulse_value,
+            'coin_bouncetime_ms': self.coin_bouncetime_ms,
+            'bill_acceptor_pin': self.bill_acceptor_pin,
+            'bill_enable_pin': self.bill_enable_pin,
+            'bill_pulse_value': self.bill_pulse_value,
+            'bill_bouncetime_ms': self.bill_bouncetime_ms
+        }
+
+    def insert_cash(self, amount: float):
+        """Manually register a cash insertion (triggered by F13/F14 keypress via API).
+        In live mode, this is handled by GPIO callbacks — this method is for simulation only.
+        """
+        if self.simulation_mode:
+            self.simulator.insert_cash(amount)
+        else:
+            # On real hardware, GPIO handles this — but allow manual override if needed
+            if self._cash_accepting:
+                self._inserted_amount += amount
+                logger.info(f"Manual cash insert: +₱{amount} (Total: ₱{self._inserted_amount})")
 
     def print_receipt(self, data: dict):
         """Print a receipt via thermal printer."""

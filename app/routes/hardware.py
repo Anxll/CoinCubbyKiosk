@@ -1,15 +1,16 @@
 """
 Hardware control routes — door locks, printer, cash acceptors.
 """
-from flask import Blueprint, request, jsonify, current_app, Response
+from flask import Blueprint, request, jsonify, current_app, Response, stream_with_context
 import json
 import time
-import threading
+from ..services.kiosk_security import require_kiosk_token
 
 hardware_bp = Blueprint('hardware', __name__)
 
 
 @hardware_bp.route('/unlock/<compartment_code>', methods=['POST'])
+@require_kiosk_token
 def unlock_compartment(compartment_code):
     """Unlock a specific compartment door."""
     try:
@@ -20,6 +21,7 @@ def unlock_compartment(compartment_code):
 
 
 @hardware_bp.route('/door-status/<compartment_code>', methods=['GET'])
+@require_kiosk_token
 def door_status(compartment_code):
     """Check if a compartment door is open or closed."""
     try:
@@ -30,6 +32,7 @@ def door_status(compartment_code):
 
 
 @hardware_bp.route('/print-receipt', methods=['POST'])
+@require_kiosk_token
 def print_receipt():
     """Print a receipt via the thermal printer."""
     data = request.get_json()
@@ -41,18 +44,22 @@ def print_receipt():
 
 
 @hardware_bp.route('/cash/start', methods=['POST'])
+@require_kiosk_token
 def start_cash_acceptance():
     """Enable coin and bill acceptors."""
     data = request.get_json() or {}
-    target_amount = data.get('target_amount', 0)
     try:
+        target_amount = float(data.get('target_amount', 0))
         current_app.hardware.start_cash_acceptance(target_amount)
         return jsonify({'success': True})
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid target amount'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 @hardware_bp.route('/cash/stop', methods=['POST'])
+@require_kiosk_token
 def stop_cash_acceptance():
     """Disable coin and bill acceptors."""
     try:
@@ -62,29 +69,48 @@ def stop_cash_acceptance():
         return jsonify({'error': str(e)}), 500
 
 
+@hardware_bp.route('/cash/debug', methods=['GET'])
+@require_kiosk_token
+def cash_debug():
+    """Return cash acceptor state for hardware diagnostics."""
+    try:
+        return jsonify(current_app.hardware.get_cash_status())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@hardware_bp.route('/cash/insert', methods=['POST'])
+@require_kiosk_token
+def insert_cash():
+    """Register browser function-key cash input for simulation and bench testing."""
+    data = request.get_json() or {}
+    amount = data.get('amount', 0)
+    if amount not in (5, 10):
+        return jsonify({'error': 'Invalid amount. Must be 5 (coin) or 10 (bill).'}), 400
+    try:
+        current_app.hardware.insert_cash(float(amount))
+        return jsonify({'success': True, 'inserted': current_app.hardware.get_inserted_amount()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @hardware_bp.route('/cash/status', methods=['GET'])
+@require_kiosk_token
 def cash_status_stream():
-    """Server-Sent Events stream for real-time cash insertion updates."""
+    """Server-Sent Events stream for real-time cash insertion updates and diagnostics."""
+    hw = current_app.hardware
+
+    @stream_with_context
     def generate():
-        hw = current_app.hardware
-        last_amount = -1
-
         while True:
-            current_amount = hw.get_inserted_amount()
-            if current_amount != last_amount:
-                last_amount = current_amount
-                data = json.dumps({
-                    'inserted': current_amount,
-                    'target': hw.cash_target,
-                    'remaining': max(0, hw.cash_target - current_amount),
-                    'complete': current_amount >= hw.cash_target
-                })
-                yield f"data: {data}\n\n"
-
-                if current_amount >= hw.cash_target and hw.cash_target > 0:
-                    break
+            status = hw.get_cash_status()
+            yield f"data: {json.dumps(status)}\n\n"
 
             time.sleep(0.3)
 
     return Response(generate(), mimetype='text/event-stream',
-                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
+                    headers={
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                        'X-Accel-Buffering': 'no'
+                    })

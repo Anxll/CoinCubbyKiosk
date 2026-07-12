@@ -2,7 +2,6 @@
 Flask application factory for Coin Cubby Kiosk.
 """
 from flask import Flask
-from flask_cors import CORS
 from .config import Config
 
 
@@ -13,7 +12,6 @@ def create_app():
         template_folder='../templates'
     )
     app.config.from_object(Config)
-    CORS(app)
 
     # Initialize hardware manager
     from .hardware.manager import HardwareManager
@@ -35,6 +33,6 @@ def create_app():
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return render_template('index.html', kiosk_api_token=app.config['KIOSK_API_TOKEN'])
 
     return app

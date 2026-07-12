@@ -1,32 +1,15 @@
 """
-Rental business logic — pricing calculations, duration exceeded charges, etc.
+Rental business logic for pricing and overdue charges.
 """
 from datetime import datetime, timezone
-from ..config import Config
 
 
 def calculate_fixed_rental_fee(hours: int, rate_per_hour: float) -> dict:
-    """Find the matching fixed duration tier and return pricing."""
-    # Assuming tiers scale based on rate_per_hour (or use Config's base multipliers)
-    # The original was: 1h=10, 3h=25, 6h=45. (Slightly discounted).
-    # Since rate is dynamic now from the DB, we can just calculate it with a small discount.
-    # Or just use the exact hours * rate_per_hour for simplicity.
-    
-    # Simple straight calculation:
+    """Calculate rental pricing directly from the Supabase rate."""
     rental_fee = hours * rate_per_hour
-    
-    # Apply standard discount pattern if desired, but for now straight multiplication is safer
-    if hours == 3: rental_fee *= 0.9
-    elif hours == 6: rental_fee *= 0.85
-    elif hours == 12: rental_fee *= 0.80
-    elif hours == 24: rental_fee *= 0.75
-    elif hours == 48: rental_fee *= 0.70
-    elif hours == 72: rental_fee *= 0.65
-    
     return {
         'rental_fee': rental_fee,
-        'service_fee': Config.SERVICE_FEE,
-        'total': rental_fee + Config.SERVICE_FEE
+        'total': rental_fee
     }
 
 
@@ -41,8 +24,7 @@ def calculate_open_time_charges(started_at_str: str, rate_per_hour: float) -> di
     return {
         'elapsed_hours': elapsed_hours,
         'rental_fee': rental_fee,
-        'service_fee': Config.SERVICE_FEE,
-        'total': rental_fee + Config.SERVICE_FEE
+        'total': rental_fee
     }
 
 

@@ -4,12 +4,16 @@ Registration is handled externally via the webapp.
 """
 from flask import Blueprint, request, jsonify
 import bcrypt
+from supabase import create_client
 from ..services.supabase_client import get_supabase
+from ..config import Config
+from ..services.kiosk_security import require_kiosk_token
 
 auth_bp = Blueprint('auth', __name__)
 
 
 @auth_bp.route('/login', methods=['POST'])
+@require_kiosk_token
 def login():
     """Authenticate user with 6-digit user code and 4-digit PIN."""
     data = request.get_json()
@@ -29,15 +33,14 @@ def login():
 
         user = result.data[0]
 
-        # Verify password via Supabase Auth (auth.users)
+        # Verify password via a temporary Supabase client so auth state does not leak across requests
         try:
+            auth_client = create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
             # We must use the email to sign in to Supabase auth
-            auth_response = db.auth.sign_in_with_password({
+            auth_response = auth_client.auth.sign_in_with_password({
                 "email": user['email'],
                 "password": pin
             })
-            # Sign out immediately so the server singleton doesn't maintain the session
-            db.auth.sign_out()
         except Exception as e:
             # AuthApiError is thrown if password is wrong
             return jsonify({'error': 'Invalid User ID or Password'}), 401
@@ -66,6 +69,7 @@ def login():
 
 
 @auth_bp.route('/user/<user_code>', methods=['GET'])
+@require_kiosk_token
 def get_user(user_code):
     """Get user profile including wallet balance and active rentals."""
     try:

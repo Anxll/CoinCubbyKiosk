@@ -7,6 +7,8 @@ const AppState = {
     rentalPricing: null,
     totalDue: 0,
     paymentMethod: null,
+    cashInserted: 0,
+    cashWalletCredit: 0,
     activeRentals: [],
     selectedRental: null,
 };
@@ -89,6 +91,8 @@ class AppController {
                 AppState.durationHours = null;
                 AppState.totalDue = 0;
                 AppState.paymentMethod = null;
+                AppState.cashInserted = 0;
+                AppState.cashWalletCredit = 0;
                 AppState.selectedRental = null;
             }
         } else if (this.currentScreen !== screenId) {
@@ -106,7 +110,10 @@ class AppController {
         }
 
         // Trigger screen init if exists
-        const screenObjName = screenId.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('') + 'Screen';
+        const screenAliases = {
+            'select-compartment': 'CompartmentScreen'
+        };
+        const screenObjName = screenAliases[screenId] || (screenId.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('') + 'Screen');
         if (window[screenObjName] && typeof window[screenObjName].init === 'function') {
             window[screenObjName].init();
         }

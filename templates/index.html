@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, height=600, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
+    <meta name="kiosk-api-token" content="{{ kiosk_api_token }}">
     <title>Coin Cubby — Secure Storage Made Easy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -257,7 +258,6 @@
                                 CURRENT RATE
                             </div>
                             <div class="rate-amount">₱<span id="open-time-rate">10</span> <span class="rate-unit">per hour</span></div>
-                            <div class="rate-service">+ ₱<span id="open-time-service">5</span> service fee</div>
                         </div>
                     </div>
                     <div class="login-buttons">
@@ -292,10 +292,6 @@
                         <div class="summary-row">
                             <span class="summary-label">Rental Fee</span>
                             <span id="payment-rental-fee" class="summary-value">₱25</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Service Fee</span>
-                            <span id="payment-service-fee" class="summary-value">₱5</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
@@ -378,31 +374,14 @@
                         <div id="cash-progress" class="cash-progress-fill" style="width: 0%"></div>
                     </div>
                     <p class="cash-hint">Insert coins or bills into the machine</p>
-                    <div class="cash-denominations">
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green">monetization_on</span>
-                            <span class="denom-value">₱1</span>
-                        </div>
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green">monetization_on</span>
-                            <span class="denom-value">₱5</span>
-                        </div>
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green">monetization_on</span>
-                            <span class="denom-value">₱10</span>
-                        </div>
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green-dark">payments</span>
-                            <span class="denom-value">₱20</span>
-                        </div>
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green-dark">payments</span>
-                            <span class="denom-value">₱50</span>
-                        </div>
-                        <div class="denom-card">
-                            <span class="material-icons-round icon-green-dark">payments</span>
-                            <span class="denom-value">₱100</span>
-                        </div>
+                    <button id="btn-cash-continue" class="btn btn-primary hidden" onclick="CashPaymentScreen.continue()">
+                        CONTINUE
+                    </button>
+                    <div class="cash-countdown-wrap">
+                        <span class="material-icons-round cash-countdown-icon">hourglass_top</span>
+                        <p class="cash-countdown-label">Time Remaining</p>
+                        <div id="cash-countdown" class="cash-countdown">1:00</div>
+                        <p class="cash-countdown-sub">Insert coins or bills before time runs out</p>
                     </div>
                     <button class="btn btn-outline btn-full" onclick="CashPaymentScreen.cancel()">CANCEL</button>
                 </div>
@@ -514,7 +493,7 @@
                         </div>
                     </div>
                     <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open" onclick="RetrievalPaymentScreen.openCompartment()">
-                        <span class="material-icons-round">check_circle</span> OPEN COMPARTMENT
+                        <span class="material-icons-round">payment</span> CHOOSE PAYMENT METHOD
                     </button>
                 </div>
             </section>

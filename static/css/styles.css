@@ -1191,28 +1191,58 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     margin-bottom: 24px;
 }
 
-.cash-denominations {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 32px;
-}
-
-.denom-card {
-    background-color: var(--white);
-    border-radius: 12px;
-    padding: 32px 16px;
+/* --- CASH COUNTDOWN TIMER --- */
+.cash-countdown-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
     border: 1px solid var(--border-color);
+    width: 100%;
 }
 
-.denom-value {
-    font-size: 20px;
+.cash-countdown-icon {
+    font-size: 44px;
+    color: var(--accent-orange);
+    margin-bottom: 8px;
+    animation: spin-hourglass 4s infinite linear;
+}
+
+@keyframes spin-hourglass {
+    0% { transform: rotate(0deg); }
+    45% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    95% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.cash-countdown-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.cash-countdown {
+    font-size: 72px;
     font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.cash-countdown-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 /* --- SUCCESS SCREEN --- */

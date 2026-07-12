@@ -5,7 +5,6 @@ Simulates coin/bill insertion, door locks, and thermal printing.
 import logging
 import threading
 import time
-import random
 
 logger = logging.getLogger(__name__)
 
@@ -36,28 +35,17 @@ class HardwareSimulator:
         return self._door_states.get(compartment_code, False)
 
     def start_cash_simulation(self, target_amount: float):
-        """Start simulating coin/bill insertions."""
+        """Start simulated cash acceptance; waits for browser function-key test input."""
         self._inserted_amount = 0
         self._simulating = True
+        logger.info(f"[SIM] Cash acceptance started. Target: ₱{target_amount}. Use F13/F8 for bill or F14/F9 for coin.")
 
-        def simulate():
-            denominations = [1, 5, 10, 20, 50, 100]
-            while self._simulating and self._inserted_amount < target_amount:
-                time.sleep(random.uniform(1.0, 3.0))
-                if not self._simulating:
-                    break
-                # Randomly pick a denomination
-                remaining = target_amount - self._inserted_amount
-                valid_denoms = [d for d in denominations if d <= remaining]
-                if not valid_denoms:
-                    break
-                coin = random.choice(valid_denoms)
-                self._inserted_amount += coin
-                label = "🪙 Coin" if coin <= 10 else "💵 Bill"
-                logger.info(f"[SIM] {label} inserted: ₱{coin} (Total: ₱{self._inserted_amount})")
-
-        self._simulation_thread = threading.Thread(target=simulate, daemon=True)
-        self._simulation_thread.start()
+    def insert_cash(self, amount: float):
+        """Manually insert simulated cash from browser function-key test input."""
+        if self._simulating:
+            self._inserted_amount += amount
+            label = "💵 Bill" if amount == 10 else "🪙 Coin"
+            logger.info(f"[SIM] {label} inserted: ₱{amount} (Total: ₱{self._inserted_amount})")
 
     def stop_cash_simulation(self):
         self._simulating = False
