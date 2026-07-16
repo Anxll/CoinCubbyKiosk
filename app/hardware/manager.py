@@ -44,40 +44,16 @@ class HardwareManager:
             from .simulator import HardwareSimulator
             self.simulator = HardwareSimulator(self)
 
+        # Initialize CAN Bus for doors
+        from .canbus import CanBusController
+        self.can_bus = CanBusController(
+            simulation_mode=self.simulation_mode, 
+            device_code=config.get('DEVICE_CODE', 'DEVICE001')
+        )
+
     def _init_gpio(self, config):
         """Initialize GPIO pins for locks and sensors."""
-        # Door lock pins (output)
-        self.lock_pins = config.get('DOOR_LOCK_PINS', [])
-        for pin in self.lock_pins:
-            self.GPIO.setup(pin, self.GPIO.OUT)
-            self.GPIO.output(pin, self.GPIO.LOW)  # Locks engaged
-
-        # Door sensor pins (input with pull-up)
-        self.sensor_pins = config.get('DOOR_SENSOR_PINS', [])
-        for pin in self.sensor_pins:
-            self.GPIO.setup(pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
-
-        # Coin acceptor (input with pull-up)
-        coin_pin = config.get('COIN_ACCEPTOR_PIN', 17)
-        self.GPIO.setup(coin_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
-        self.GPIO.add_event_detect(coin_pin, self.GPIO.FALLING,
-                                    callback=self._coin_pulse_callback, bouncetime=self.coin_bouncetime_ms)
-        self.coin_acceptor_pin = coin_pin
-        self.coin_enable_pin = config.get('COIN_ACCEPTOR_ENABLE_PIN')
-        if self.coin_enable_pin is not None:
-            self.GPIO.setup(self.coin_enable_pin, self.GPIO.OUT)
-            self.GPIO.output(self.coin_enable_pin, self.GPIO.HIGH)
-
-        # Bill acceptor (input with pull-up)
-        bill_pin = config.get('BILL_ACCEPTOR_PIN', 27)
-        self.GPIO.setup(bill_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
-        self.GPIO.add_event_detect(bill_pin, self.GPIO.FALLING,
-                                    callback=self._bill_pulse_callback, bouncetime=self.bill_bouncetime_ms)
-        self.bill_acceptor_pin = bill_pin
-        self.bill_enable_pin = config.get('BILL_ACCEPTOR_ENABLE_PIN')
-        if self.bill_enable_pin is not None:
-            self.GPIO.setup(self.bill_enable_pin, self.GPIO.OUT)
-            self.GPIO.output(self.bill_enable_pin, self.GPIO.HIGH)
+        # TODO
 
     def _coin_pulse_callback(self, channel):
         """Handle coin acceptor pulse (JY-100F)."""
@@ -96,29 +72,16 @@ class HardwareManager:
     COMPARTMENT_PIN_MAP = {
         'A01': 0, 'A02': 1, 'A03': 2, 'A04': 3,
         'B01': 4, 'B02': 5, 'B03': 6, 'B04': 7,
+        # Alternative naming scheme (Small, Medium, Large)
+        'S1': 0, 'S2': 1, 'S3': 2, 'S4': 3,
+        'M1': 4, 'M2': 5,
+        'L1': 6, 'L2': 7,
     }
 
     def unlock_door(self, compartment_code: str):
-        """Unlock a compartment door for a brief period."""
-        if self.simulation_mode:
-            self.simulator.unlock_door(compartment_code)
-            return
-
-        idx = self.COMPARTMENT_PIN_MAP.get(compartment_code)
-        if idx is None or idx >= len(self.lock_pins):
-            raise ValueError(f"Unknown compartment: {compartment_code}")
-
-        pin = self.lock_pins[idx]
-        self.GPIO.output(pin, self.GPIO.HIGH)  # Unlock (energize solenoid)
-
-        import threading
-        def relock():
-            import time
-            time.sleep(10)  # Keep unlocked for 10 seconds
-            self.GPIO.output(pin, self.GPIO.LOW)
-
-        threading.Thread(target=relock, daemon=True).start()
-        logger.info(f"Door unlocked: {compartment_code} (pin {pin})")
+        """Unlock a compartment door via CAN bus."""
+        # The can_bus controller handles simulation mode internally
+        self.can_bus.unlock_compartment(compartment_code)
 
     def get_door_status(self, compartment_code: str) -> bool:
         """Check if a compartment door is open. Returns True if open."""

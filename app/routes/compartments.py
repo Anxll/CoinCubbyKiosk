@@ -21,7 +21,7 @@ def list_compartments():
         # 1. Look up device_id based on DEVICE_CODE
         device_res = db.table('devices').select('device_id').eq('device_code', Config.DEVICE_CODE).execute()
         if not device_res.data:
-            return jsonify({'error': 'Device not found in system'}), 404
+            return jsonify({'error': 'Device not found in system', 'code': Config.DEVICE_CODE}), 401
         device_id = device_res.data[0]['device_id']
         
         # 2. Build locker query for this device

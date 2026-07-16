@@ -7,6 +7,9 @@ window.RetrievalReadyScreen = {
             await Api.printReceipt({
                 type: 'retrieval',
                 compartment_code: AppState.compartmentCode,
+                locker_name: AppState.selectedRental
+                    ? `${AppState.selectedRental.compartment_size ? AppState.selectedRental.compartment_size.charAt(0).toUpperCase() + AppState.selectedRental.compartment_size.slice(1) : ''} Locker (${AppState.compartmentCode})`
+                    : AppState.compartmentCode,
                 rental_type: AppState.selectedRental ? (AppState.selectedRental.rental_type === 'fixed' ? 'Fixed Duration' : 'Open Time') : 'Unknown',
                 started_at: AppState.selectedRental ? new Date(AppState.selectedRental.started_at).toLocaleString() : 'Unknown',
                 amount: AppState.amountCharged || 0
