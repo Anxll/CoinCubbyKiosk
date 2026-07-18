@@ -18,13 +18,13 @@ def list_compartments():
     try:
         db = get_supabase()
         
-        # 1. Look up device_id based on DEVICE_CODE
-        device_res = db.table('devices').select('device_id').eq('device_code', Config.DEVICE_CODE).execute()
+        # 1. Look up device_id based on KIOSK_ID matching the device_code column
+        device_res = db.table('devices').select('device_id').eq('device_code', Config.KIOSK_ID).execute()
         if not device_res.data:
-            return jsonify({'error': 'Device not found in system', 'code': Config.DEVICE_CODE}), 401
+            return jsonify({'error': 'Device not found in system', 'code': Config.KIOSK_ID}), 401
         device_id = device_res.data[0]['device_id']
         
-        # 2. Build locker query for this device
+        # 2. Build locker query — use module_id for the 16-char CAN bus identity
         query = db.table('lockers').select('''
             locker_id, locker_number, status, module_id, size_type_id,
             modules(name),
@@ -33,11 +33,6 @@ def list_compartments():
         
         result = query.execute()
 
-        # 3. Filter by module if needed (client passes 'A' or 'B' etc, modules table has 'name' which is smallint in schema?)
-        # Let's filter in python since modules.name is smallint but client sends A/B, maybe module id corresponds?
-        # Assuming frontend logic will be updated if module format changes, or we map A=1, B=2.
-        # Let's just return all and format them for the frontend.
-        
         formatted_lockers = []
         for l in result.data:
             # Get the rate for this size type
@@ -46,8 +41,8 @@ def list_compartments():
                 return jsonify({'error': f'Rate not configured for size type {l["size_type_id"]}'}), 500
             price_per_hour = float(rate_res.data[0]['price_per_hour'])
             
-            # Module name is a smallint (1, 2, etc.) — use it as-is
-            mod_val = str(l['modules']['name']) if l['modules'] else '1'
+            mod = l['modules'] or {}
+            mod_val = str(mod.get('name', '1'))
             
             if module_name and mod_val != str(module_name):
                 continue
@@ -56,6 +51,7 @@ def list_compartments():
                 'id': l['locker_id'],
                 'code': l['locker_number'],
                 'module': mod_val,
+                'device_code': l.get('module_id', ''),  # 16-char CAN bus module ID
                 'size': l['storage_size_type']['name'].lower() if l['storage_size_type'] else 'unknown',
                 'rate_per_hour': price_per_hour,
                 'status': l['status'].lower()
@@ -74,13 +70,13 @@ def get_compartment(code):
     try:
         db = get_supabase()
         
-        # 1. Get device id
-        device_res = db.table('devices').select('device_id').eq('device_code', Config.DEVICE_CODE).execute()
+        # 1. Get device id from KIOSK_ID matching the device_code column
+        device_res = db.table('devices').select('device_id').eq('device_code', Config.KIOSK_ID).execute()
         if not device_res.data:
              return jsonify({'error': 'Device not found'}), 404
         device_id = device_res.data[0]['device_id']
         
-        # 2. Get locker
+        # 2. Get locker — use module_id for the CAN bus identity
         result = db.table('lockers').select('''
             locker_id, locker_number, status, module_id, size_type_id,
             modules(name),
@@ -97,13 +93,15 @@ def get_compartment(code):
             return jsonify({'error': f'Rate not configured for size type {l["size_type_id"]}'}), 500
         price_per_hour = float(rate_res.data[0]['price_per_hour'])
         
-        mod_val = str(l['modules']['name']) if l['modules'] else '1'
+        mod = l['modules'] or {}
+        mod_val = str(mod.get('name', '1'))
 
         return jsonify({
             'compartment': {
                 'id': l['locker_id'],
                 'code': l['locker_number'],
                 'module': mod_val,
+                'device_code': l.get('module_id', ''),  # 16-char CAN bus module ID
                 'size': l['storage_size_type']['name'].lower() if l['storage_size_type'] else 'unknown',
                 'rate_per_hour': price_per_hour,
                 'status': l['status'].lower()

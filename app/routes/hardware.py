@@ -12,9 +12,17 @@ hardware_bp = Blueprint('hardware', __name__)
 @hardware_bp.route('/unlock/<compartment_code>', methods=['POST'])
 @require_kiosk_token
 def unlock_compartment(compartment_code):
-    """Unlock a specific compartment door."""
+    """Unlock a specific compartment door.
+    
+    Expects JSON body: { "device_code": "AMSJFIWESLFIENSA" }
+    The device_code comes from the modules table in Supabase for the target compartment.
+    """
+    data = request.get_json() or {}
+    device_code = data.get('device_code', '').strip()
+    if not device_code:
+        return jsonify({'error': 'device_code is required in the request body'}), 400
     try:
-        current_app.hardware.unlock_door(compartment_code)
+        current_app.hardware.unlock_door(compartment_code, device_code)
         return jsonify({'success': True, 'message': f'Compartment {compartment_code} unlocked'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -25,7 +25,10 @@ window.RetrievalReadyScreen = {
         btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> UNLOCKING...';
         
         try {
-            await Api.request(`/hardware/unlock/${AppState.compartmentCode}`, { method: 'POST' });
+            await Api.request(`/hardware/unlock/${AppState.compartmentCode}`, {
+                method: 'POST',
+                body: JSON.stringify({ device_code: AppState.selectedRental?.device_code || '' })
+            });
             App.navigate('dashboard', {}, true);
         } catch (e) {
             alert(e.message);

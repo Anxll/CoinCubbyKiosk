@@ -3,6 +3,7 @@ Coin Cubby Kiosk Application Entry Point
 Runs the Flask server that serves both the kiosk UI and the hardware API.
 """
 import os
+os.environ["GPIOZERO_PIN_FACTORY"] = 'pigpio'
 from app import create_app
 
 app = create_app()

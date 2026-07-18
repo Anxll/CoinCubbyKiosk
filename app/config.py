@@ -30,19 +30,6 @@ class Config:
     # Hardware
     SIMULATION_MODE = os.getenv('SIMULATION_MODE', 'false').lower() == 'true'
     KIOSK_ID = os.getenv('KIOSK_ID', 'kiosk-001')
-    DEVICE_CODE = os.getenv('DEVICE_CODE', 'KIOSK-001')
-
-    # GPIO Pins (BCM numbering)
-    COIN_ACCEPTOR_PIN = int(os.getenv('COIN_ACCEPTOR_PIN', '17'))
-    COIN_ACCEPTOR_ENABLE_PIN = _optional_int('COIN_ACCEPTOR_ENABLE_PIN')
-    COIN_ACCEPTOR_PULSE_VALUE = _optional_float('COIN_ACCEPTOR_PULSE_VALUE', 5.0)
-    COIN_ACCEPTOR_BOUNCETIME_MS = int(os.getenv('COIN_ACCEPTOR_BOUNCETIME_MS', '30'))
-    BILL_ACCEPTOR_PIN = int(os.getenv('BILL_ACCEPTOR_PIN', '27'))
-    BILL_ACCEPTOR_ENABLE_PIN = _optional_int('BILL_ACCEPTOR_ENABLE_PIN')
-    BILL_ACCEPTOR_PULSE_VALUE = _optional_float('BILL_ACCEPTOR_PULSE_VALUE', 10.0)
-    BILL_ACCEPTOR_BOUNCETIME_MS = int(os.getenv('BILL_ACCEPTOR_BOUNCETIME_MS', '10'))
-    DOOR_LOCK_PINS = [int(p) for p in os.getenv('DOOR_LOCK_PINS', '5,6,13,19,26,16,20,21').split(',')]
-    DOOR_SENSOR_PINS = [int(p) for p in os.getenv('DOOR_SENSOR_PINS', '4,22,23,24,25,12,7,8').split(',')]
 
     # Compartment Configuration
     MODULES = ['A', 'B']

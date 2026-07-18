@@ -41,7 +41,10 @@ window.RentalConfirmedScreen = {
         btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> UNLOCKING...';
         
         try {
-            await Api.request(`/hardware/unlock/${AppState.selectedCompartment.code}`, { method: 'POST' });
+            await Api.request(`/hardware/unlock/${AppState.selectedCompartment.code}`, {
+                method: 'POST',
+                body: JSON.stringify({ device_code: AppState.selectedCompartment.device_code })
+            });
             App.navigate('dashboard', {}, true);
         } catch (e) {
             alert(e.message);

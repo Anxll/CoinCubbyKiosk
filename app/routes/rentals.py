@@ -13,7 +13,7 @@ rentals_bp = Blueprint('rentals', __name__)
 
 
 def _get_current_device_id(db):
-    device_res = db.table('devices').select('device_id').eq('device_code', Config.DEVICE_CODE).execute()
+    device_res = db.table('devices').select('device_id').eq('device_code', Config.KIOSK_ID).execute()
     if not device_res.data:
         return None
     return device_res.data[0]['device_id']
@@ -192,10 +192,9 @@ def get_active_rentals(user_id):
         device_id = _get_current_device_id(db)
         if not device_id:
             return jsonify({'error': 'Device not found'}), 404
-        
-        # Get active transactions
-        result = db.table('transactions').select('''
-            *, lockers(locker_number, size_type_id, storage_size_type(name), device_id)
+               # Get active transactions — include module_id for CAN bus unlock
+        result = db.table('transactions').select('''\
+            *, lockers(locker_number, size_type_id, storage_size_type(name), device_id, module_id)
         ''').eq('customer_id', user_id).eq('status', 'Active').order('start_time', desc=True).execute()
 
         rentals = []
@@ -208,10 +207,12 @@ def get_active_rentals(user_id):
             rate = float(rate_res.data[0]['price_per_hour'])
             rental_type = 'fixed' if r.get('duration_minutes') else 'open_time'
             
+            mod = r['lockers'].get('modules') or {}
             rental_info = {
                 'id': r['transaction_id'],
                 'compartment_code': r['lockers']['locker_number'],
                 'compartment_size': r['lockers']['storage_size_type']['name'] if r['lockers'].get('storage_size_type') else 'unknown',
+                'device_code': r['lockers'].get('module_id', ''),  # 16-char CAN bus module ID
                 'rental_type': rental_type,
                 'started_at': r['start_time'],
                 'expires_at': r.get('end_time'),
@@ -262,7 +263,7 @@ def retrieve_rental(rental_id):
         device_id = _get_current_device_id(db)
         if not device_id:
             return jsonify({'error': 'Device not found'}), 404
-        result = db.table('transactions').select('*, lockers(locker_number, locker_id, size_type_id, device_id)').eq('transaction_id', rental_id).single().execute()
+        result = db.table('transactions').select('*, lockers(locker_number, locker_id, size_type_id, device_id, module_id)').eq('transaction_id', rental_id).single().execute()
         rental = result.data
 
         if not rental or rental['status'] != 'Active':
@@ -318,8 +319,9 @@ def retrieve_rental(rental_id):
 
         # Unlock the compartment door DIRECTLY using hardware abstraction, ignore device_commands for now per user instruction
         compartment_code = rental['lockers']['locker_number']
+        device_code = rental['lockers'].get('module_id', '')
         try:
-            current_app.hardware.unlock_door(compartment_code)
+            current_app.hardware.unlock_door(compartment_code, device_code)
         except Exception as e:
             return jsonify({'error': f'Unable to unlock compartment: {e}'}), 500
 
@@ -347,107 +349,109 @@ def retrieve_rental(rental_id):
 @rentals_bp.route('/compartment/<compartment_id>/active', methods=['GET'])
 @require_kiosk_token
 def get_compartment_active_rental(compartment_id):
-    """Fetch the active rental (transaction) for a specific compartment, if any."""
+    """Return the active rental for a given compartment, including renter info and amount paid."""
     try:
         db = get_supabase()
+
         res = db.table('transactions').select('''
-            *,
-            customers (customer_id, full_name, user_id, email)
+            transaction_id, customer_id, start_time, duration_minutes, status,
+            customers (customer_id, full_name, user_id)
         ''').eq('locker_id', compartment_id).eq('status', 'Active').execute()
 
         if not res.data:
-            return jsonify({'success': True, 'rental': None})
+            return jsonify({'rental': None})
 
-        rental_data = res.data[0]
-        
-        # Check payments for this transaction
-        payments_res = db.table('payments').select('amount').eq('transaction_id', rental_data['transaction_id']).execute()
-        amount_paid = 0.0
-        if payments_res.data:
-            amount_paid = sum(float(p['amount']) for p in payments_res.data)
+        rental = res.data[0]
+        customer = rental.get('customers') or {}
+        rental_type = 'fixed' if rental.get('duration_minutes') else 'open_time'
 
-        customer = rental_data.get('customers') or {}
+        # Sum up all payments recorded for this transaction
+        payments_res = db.table('payments').select('amount').eq('transaction_id', rental['transaction_id']).execute()
+        amount_paid = sum(float(p['amount']) for p in payments_res.data) if payments_res.data else 0.0
 
         return jsonify({
-            'success': True,
             'rental': {
-                'id': rental_data['transaction_id'],
-                'user_id': rental_data['customer_id'],
+                'id': rental['transaction_id'],
+                'user_id': customer.get('customer_id'),
                 'user_code': customer.get('user_id', '—'),
                 'full_name': customer.get('full_name', '—'),
-                'compartment_id': rental_data['locker_id'],
-                'rental_type': 'fixed' if rental_data.get('duration_minutes') else 'open_time',
-                'start_time': rental_data['start_time'],
-                'amount_paid': amount_paid
+                'rental_type': rental_type,
+                'start_time': rental['start_time'],
+                'amount_paid': amount_paid,
             }
         })
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 @rentals_bp.route('/compartment/<compartment_id>/emergency-unlock', methods=['POST'])
 @require_kiosk_token
-def emergency_unlock_compartment(compartment_id):
-    """Emergency unlock a compartment. Void rental & refund paid amount to user's wallet if active, then unlock door."""
+def emergency_unlock(compartment_id):
+    """Admin emergency unlock — voids active rental & refunds wallet if occupied."""
     try:
         db = get_supabase()
-        
-        # 1. Look up any active transaction on this compartment
+
+        # 1. Look up any active transaction on this compartment, join customers and lockers
         res = db.table('transactions').select('''
             *,
-            customers (customer_id, full_name, user_id, email),
-            lockers (locker_number)
+            customers (customer_id, full_name, user_id),
+            lockers (locker_number, module_id)
         ''').eq('locker_id', compartment_id).eq('status', 'Active').execute()
-        
+
         refunded_amount = 0.0
         user_code = '—'
         compartment_code = None
-        
+        device_code = None
+
         if res.data:
             rental = res.data[0]
             customer_id = rental['customer_id']
             transaction_id = rental['transaction_id']
-            user_code = rental.get('customers', {}).get('user_id', '—')
-            compartment_code = rental.get('lockers', {}).get('locker_number')
-            
+            customer = rental.get('customers') or {}
+            locker = rental.get('lockers') or {}
+            user_code = customer.get('user_id', '—')
+            compartment_code = locker.get('locker_number')
+            device_code = locker.get('module_id')
+
             # Find how much was paid in payments table
             payments_res = db.table('payments').select('amount').eq('transaction_id', transaction_id).execute()
             if payments_res.data:
                 refunded_amount = sum(float(p['amount']) for p in payments_res.data)
-                
+
             # If there's an amount to refund, credit the user's wallet
             if refunded_amount > 0:
                 from ..services.payment_service import _credit_wallet
                 credit_res = _credit_wallet(customer_id, refunded_amount)
                 if not credit_res.get('success'):
                     return jsonify({'error': f"Failed to refund wallet: {credit_res.get('error')}"}), 500
-            
+
             # Update transaction status to 'Cancelled'
             db.table('transactions').update({'status': 'Cancelled'}).eq('transaction_id', transaction_id).execute()
-            
-        if not compartment_code:
-            # Look up compartment number directly
-            comp_res = db.table('lockers').select('locker_number').eq('locker_id', compartment_id).execute()
-            if comp_res.data:
-                compartment_code = comp_res.data[0]['locker_number']
-            else:
+
+        if not compartment_code or not device_code:
+            # Look up compartment number and module_id directly from lockers table
+            comp_res = db.table('lockers').select('locker_number, module_id').eq('locker_id', compartment_id).execute()
+            if not comp_res.data:
                 return jsonify({'error': 'Compartment not found'}), 404
-                
-        # 2. Unlock the door
+            compartment_code = comp_res.data[0]['locker_number']
+            device_code = comp_res.data[0]['module_id']
+
+        # 2. Unlock the door (requires both compartment_code and device_code/module_id)
         try:
-            current_app.hardware.unlock_door(compartment_code)
+            current_app.hardware.unlock_door(compartment_code, device_code)
         except Exception as e:
             return jsonify({'error': f"Failed to hardware unlock: {str(e)}"}), 500
-            
-        # 3. Mark the locker as Maintenance (under maintenance)
-        db.table('lockers').update({'status': 'Maintenance'}).eq('locker_id', compartment_id).execute()
-        
+
+        # 3. Mark the locker as Available
+        db.table('lockers').update({'status': 'Available'}).eq('locker_id', compartment_id).execute()
+
         return jsonify({
             'success': True,
             'refunded_amount': refunded_amount,
             'user_code': user_code,
             'compartment_code': compartment_code
         })
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
