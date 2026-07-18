@@ -11,6 +11,11 @@ const AppState = {
     cashWalletCredit: 0,
     activeRentals: [],
     selectedRental: null,
+    // Admin state
+    adminSelectedCompartment: null,
+    adminUnlockRefund: 0,
+    adminUnlockUser: null,
+    adminUnlockCompartment: null,
 };
 
 class AppController {
@@ -49,7 +54,7 @@ class AppController {
         const overlay = document.getElementById('timeout-overlay');
         if (overlay) overlay.classList.add('hidden');
 
-        if (this.currentScreen !== 'dashboard') {
+        if (this.currentScreen !== 'dashboard' && this.currentScreen !== 'admin-login' && !this.currentScreen.startsWith('admin-')) {
             this.inactivityTimeout = setTimeout(() => {
                 this.startCountdown();
             }, this.INACTIVITY_LIMIT_MS);
@@ -111,7 +116,14 @@ class AppController {
 
         // Trigger screen init if exists
         const screenAliases = {
-            'select-compartment': 'CompartmentScreen'
+            'select-compartment': 'CompartmentScreen',
+            'admin-login': 'AdminLoginScreen',
+            'admin-verify-otp': 'AdminVerifyOtpScreen',
+            'admin-dashboard': 'AdminDashboardScreen',
+            'admin-select-compartment': 'AdminSelectCompartmentScreen',
+            'admin-confirm-unlock': 'AdminConfirmUnlockScreen',
+            'admin-unlock-steps': 'AdminUnlockStepsScreen',
+            'admin-unlock-done': 'AdminUnlockDoneScreen',
         };
         const screenObjName = screenAliases[screenId] || (screenId.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('') + 'Screen');
         if (window[screenObjName] && typeof window[screenObjName].init === 'function') {

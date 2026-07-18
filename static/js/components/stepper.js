@@ -3,8 +3,28 @@ const Stepper = {
     
     rentSteps: ['Login', 'Select', 'Type', 'Details', 'Payment'],
     retrieveSteps: ['Login', 'Rentals', 'Payment'],
+    adminSteps: ['Login', 'Select', 'Confirm', 'Unlock'],
     
     update(screenId, flow) {
+        // Admin flow stepper
+        if (screenId && screenId.startsWith('admin-')) {
+            if (screenId === 'admin-dashboard' || screenId === 'admin-unlock-done') {
+                this.container.classList.add('hidden');
+                return;
+            }
+            this.container.classList.remove('hidden');
+
+            let activeIdx = 0;
+            if (screenId === 'admin-login') activeIdx = 0;
+            if (screenId === 'admin-select-compartment') activeIdx = 1;
+            if (screenId === 'admin-confirm-unlock') activeIdx = 2;
+            if (screenId === 'admin-unlock-steps') activeIdx = 3;
+
+            this._render(this.adminSteps, activeIdx, true);
+            return;
+        }
+
+        // User flow stepper
         if (screenId === 'dashboard' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
             this.container.classList.add('hidden');
             return;
@@ -26,17 +46,26 @@ const Stepper = {
             if (screenId === 'retrieval-payment') activeIdx = 2;
         }
 
+        this._render(steps, activeIdx, false);
+    },
+
+    _render(steps, activeIdx, isAdmin) {
         let html = '<div class="step-wrapper">';
         steps.forEach((step, idx) => {
             let status = 'upcoming';
             if (idx === activeIdx) status = 'active';
             else if (idx < activeIdx) status = 'completed';
 
-            let icon = status === 'completed' ? '<span class="material-icons-round" style="font-size:16px;">check</span>' : (idx + 1);
-            
+            let icon = status === 'completed'
+                ? '<span class="material-icons-round" style="font-size:16px;">check</span>'
+                : (idx + 1);
+
+            const adminCls = isAdmin ? 'admin-step-indicator' : '';
+            const adminLineCls = isAdmin ? 'admin-step-line' : '';
+
             html += `
                 <div class="step ${status}">
-                    <div class="step-indicator">${icon}</div>
+                    <div class="step-indicator ${status === 'active' && isAdmin ? 'admin-step-active-indicator' : ''}">${icon}</div>
                     <div class="step-label">${step}</div>
                 </div>
             `;

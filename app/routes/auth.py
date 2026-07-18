@@ -99,3 +99,83 @@ def get_user(user_code):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+import random
+from datetime import datetime, timedelta, timezone
+
+@auth_bp.route('/admin/login', methods=['POST'])
+@require_kiosk_token
+def admin_login():
+    """Authenticate kiosk admin with kiosk_admin_id and password."""
+    data = request.get_json()
+    kiosk_admin_id = data.get('kiosk_admin_id', '').strip()
+    kiosk_admin_pwd = data.get('kiosk_admin_password', '').strip()
+    
+    if not kiosk_admin_id or not kiosk_admin_pwd:
+        return jsonify({'error': 'Admin ID and Password are required'}), 400
+
+    try:
+        db = get_supabase()
+        # Verify from admin table
+        result = db.table('admin').select('id').eq('kiosk_admin_id', kiosk_admin_id).eq('kiosk_admin_password', kiosk_admin_pwd).execute()
+        
+        if not result.data:
+            return jsonify({'error': 'Invalid Admin ID or Password'}), 401
+            
+        admin_uuid = result.data[0]['id']
+        
+        # Generate 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # Insert OTP into kiosk_verification_codes
+        expires_at = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+        db.table('kiosk_verification_codes').insert({
+            'admin_id': admin_uuid,
+            'verification_code': otp,
+            'status': 'Pending',
+            'expires_at': expires_at
+        }).execute()
+        
+        return jsonify({
+            'success': True,
+            'admin_id': admin_uuid,
+            'generated_otp': otp # Sending it back just to simulate the UI alert
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/admin/verify-otp', methods=['POST'])
+@require_kiosk_token
+def admin_verify_otp():
+    """Verify the 6-digit OTP for the admin."""
+    data = request.get_json()
+    admin_uuid = data.get('admin_id', '').strip()
+    otp = data.get('verification_code', '').strip()
+    
+    if not admin_uuid or not otp:
+        return jsonify({'error': 'Admin ID and OTP are required'}), 400
+        
+    try:
+        db = get_supabase()
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Find a matching, pending OTP that hasn't expired
+        result = db.table('kiosk_verification_codes') \
+            .select('verification_id, status') \
+            .eq('admin_id', admin_uuid) \
+            .eq('verification_code', otp) \
+            .eq('status', 'Pending') \
+            .gte('expires_at', now) \
+            .execute()
+            
+        if not result.data:
+            return jsonify({'error': 'Invalid or expired Verification PIN.'}), 401
+            
+        # Mark as Used
+        verify_id = result.data[0]['verification_id']
+        db.table('kiosk_verification_codes').update({'status': 'Used'}).eq('verification_id', verify_id).execute()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

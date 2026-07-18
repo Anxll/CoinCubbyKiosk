@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css?v=3">
 </head>
 <body>
     <div id="kiosk-app">
@@ -69,6 +69,50 @@
                         </button>
                     </div>
                     <p class="dashboard-hint">Touch a button to begin</p>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Login -->
+            <section id="screen-admin-login" class="screen">
+                <div class="screen-body split-layout">
+                    <div class="login-form">
+                        <div class="input-group input-group-active" id="admin-userid-group">
+                            <label class="input-label">ADMIN ID</label>
+                            <div class="digit-boxes" id="admin-userid-boxes" data-length="6"></div>
+                        </div>
+                        <div class="input-group" id="admin-pin-group">
+                            <label>ENTER ADMIN PASSWORD</label>
+                            <div class="digit-boxes" id="admin-pin-boxes"></div>
+                        </div>
+                        <div class="login-buttons">
+                            <button class="btn btn-outline" onclick="App.navigate('dashboard')">EXIT</button>
+                            <button id="btn-admin-continue" class="btn btn-primary" onclick="AdminLoginScreen.submit()">CONTINUE</button>
+                        </div>
+                    </div>
+                    <!-- On-screen numpad -->
+                    <div id="numpad-admin" class="numpad-container"></div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Verify OTP -->
+            <section id="screen-admin-verify-otp" class="screen">
+                <div class="screen-body split-layout">
+                    <div class="login-form">
+                        <div class="admin-warning-banner" style="margin-bottom: 24px; text-align: left;">
+                            <span class="material-icons-round">security</span>
+                            <span>Double verification required. A 6-digit PIN has been generated.</span>
+                        </div>
+                        <div class="input-group input-group-active">
+                            <label class="input-label" style="color:var(--admin-pink)">ENTER VERIFICATION PIN</label>
+                            <div class="digit-boxes" id="admin-otp-boxes" data-length="6"></div>
+                        </div>
+                        <div class="login-buttons" style="margin-top: 40px;">
+                            <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                            <button id="btn-admin-verify-otp" class="btn admin-btn-pink" onclick="AdminVerifyOtpScreen.submit()">VERIFY</button>
+                        </div>
+                    </div>
+                    <!-- On-screen numpad -->
+                    <div id="numpad-admin-otp" class="numpad-container"></div>
                 </div>
             </section>
 
@@ -515,6 +559,163 @@
                 </div>
             </section>
 
+            <!-- ====== ADMIN FLOW ====== -->
+
+            <!-- SCREEN: Admin Dashboard -->
+            <section id="screen-admin-dashboard" class="screen">
+                <div class="screen-body">
+                    <div class="admin-dash-header">
+                        <div class="admin-dash-icon">
+                            <span class="material-icons-round">admin_panel_settings</span>
+                        </div>
+                        <h2 class="admin-dash-title">Admin Panel</h2>
+                        <p class="admin-dash-sub">Select an operation to perform</p>
+                    </div>
+                    <div class="admin-dash-actions">
+                        <button class="admin-action-card" onclick="App.navigate('admin-select-compartment')">
+                            <div class="admin-action-icon">
+                                <span class="material-icons-round">lock_open</span>
+                            </div>
+                            <div class="admin-action-text">
+                                <strong>Emergency Unlock</strong>
+                                <span>Unlock & void rental payment</span>
+                            </div>
+                            <span class="material-icons-round admin-action-arrow">chevron_right</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-outline admin-exit-btn" onclick="App.navigate('dashboard', {}, true)">
+                        <span class="material-icons-round">logout</span> EXIT ADMIN
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Select Compartment -->
+            <section id="screen-admin-select-compartment" class="screen">
+                <div class="screen-body screen-body-full comp-screen-layout">
+                    <!-- Legend bar -->
+                    <div class="comp-legend-bar">
+                        <span class="legend-item"><span class="legend-dot legend-available"></span> Available</span>
+                        <span class="legend-item"><span class="legend-dot legend-occupied"></span> Occupied</span>
+                        <span class="legend-item"><span class="legend-dot legend-maintenance"></span> Maintenance</span>
+                        <span class="admin-legend-badge"><span class="material-icons-round" style="font-size:14px">admin_panel_settings</span> Select ANY locker to unlock</span>
+                    </div>
+                    <div class="comp-center-area">
+                        <div class="comp-card-wrapper">
+                            <div class="module-title-box">
+                                <div class="module-circle admin-module-circle" id="admin-module-circle-id">1</div>
+                                <div class="module-title-text">
+                                    <div class="module-name" id="admin-module-name-title">Module 1</div>
+                                    <div class="module-avail" id="admin-module-avail-count">0 occupied</div>
+                                </div>
+                            </div>
+                            <div id="admin-compartment-grid" class="compartment-grid"></div>
+                        </div>
+                    </div>
+                    <div class="comp-bottom-bar">
+                        <div class="compartment-footer">
+                            <button id="btn-admin-prev-module" class="btn btn-text" onclick="AdminSelectCompartmentScreen.prevModule()">
+                                <span class="material-icons-round">chevron_left</span> PREV
+                            </button>
+                            <span id="admin-module-page" class="module-page admin-page-indicator">1 / 2</span>
+                            <button id="btn-admin-next-module" class="btn btn-text" onclick="AdminSelectCompartmentScreen.nextModule()">
+                                NEXT <span class="material-icons-round">chevron_right</span>
+                            </button>
+                        </div>
+                        <div style="display:flex; justify-content:center; padding: 0 24px;">
+                            <button id="btn-admin-confirm-compartment" class="btn btn-confirm-selection admin-btn-pink" onclick="AdminSelectCompartmentScreen.confirm()" disabled style="width:100%; max-width:440px;">UNLOCK THIS LOCKER</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Confirm Unlock -->
+            <section id="screen-admin-confirm-unlock" class="screen">
+                <div class="screen-body">
+                    <div class="admin-warning-banner">
+                        <span class="material-icons-round">admin_panel_settings</span>
+                        <span>Admin Unlock — If occupied, rental will be voided &amp; refunded to wallet</span>
+                    </div>
+                    <div class="card card-center admin-confirm-card">
+                        <div class="summary-row summary-row-header">
+                            <div class="summary-row-left">
+                                <span class="material-icons-round" style="color:var(--admin-pink)">inventory_2</span>
+                                <span class="summary-label" style="color:var(--admin-pink)">Compartment</span>
+                            </div>
+                            <span id="admin-confirm-compartment" class="summary-value">A04</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Rented By (User ID)</span>
+                            <span id="admin-confirm-user" class="summary-value">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Rental Type</span>
+                            <span id="admin-confirm-type" class="summary-value">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Start Time</span>
+                            <span id="admin-confirm-start" class="summary-value">—</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="summary-row summary-row-total">
+                            <span class="summary-label"><strong>Amount to Refund</strong></span>
+                            <span id="admin-confirm-refund" class="summary-value" style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
+                        </div>
+                        <p class="admin-refund-note">If occupied, this amount will be automatically credited to the user's wallet. Otherwise ₱0.00 — no active rental.</p>
+                    </div>
+                    <div class="login-buttons">
+                        <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                        <button id="btn-admin-proceed-unlock" class="btn admin-btn-pink" onclick="AdminConfirmUnlockScreen.proceed()">PROCEED TO UNLOCK</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Unlock Steps -->
+            <section id="screen-admin-unlock-steps" class="screen">
+                <div class="screen-body" style="display:flex; flex-direction:column; gap:0;">
+                    <div class="admin-steps-header">
+                        <span id="admin-steps-compartment-badge" class="admin-compartment-badge">
+                            <span class="material-icons-round" style="font-size:14px">inventory_2</span>
+                            Compartment A04
+                        </span>
+                        <h2 class="admin-steps-title">Admin Unlock</h2>
+                        <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Follow the steps below, then confirm to release the lock.</p>
+                    </div>
+                    <div class="admin-steps-list" id="admin-steps-list"></div>
+                    <button id="btn-admin-complete-unlock" class="btn admin-btn-pink btn-full" onclick="AdminUnlockStepsScreen.completeUnlock()" style="flex-shrink:0;">
+                        <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
+                    </button>
+                </div>
+            </section>
+
+            <!-- SCREEN: Admin Unlock Done -->
+            <section id="screen-admin-unlock-done" class="screen">
+                <div class="screen-body">
+                    <div class="admin-success-icon">
+                        <span class="material-icons-round">check_circle</span>
+                    </div>
+                    <h2 class="admin-success-title">Locker Unlocked!</h2>
+                    <div class="card card-center">
+                        <div class="summary-row">
+                            <span class="summary-label">Compartment</span>
+                            <span id="admin-done-compartment" class="summary-value">A04</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">User ID</span>
+                            <span id="admin-done-user" class="summary-value">—</span>
+                        </div>
+                        <hr class="divider">
+                        <div class="summary-row summary-row-total">
+                            <span class="summary-label"><strong>Refunded to Wallet</strong></span>
+                            <span id="admin-done-refund" class="summary-value" style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
+                        </div>
+                    </div>
+                    <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet automatically.</p>
+                    <button class="btn admin-btn-pink btn-full" onclick="App.navigate('admin-dashboard')">
+                        <span class="material-icons-round">home</span> BACK TO ADMIN PANEL
+                    </button>
+                </div>
+            </section>
+
         </main>
         <!-- === TIMEOUT OVERLAY === -->
         <div id="timeout-overlay" class="timeout-overlay hidden">
@@ -527,26 +728,33 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/components/header.js"></script>
-    <script src="/static/js/components/stepper.js"></script>
-    <script src="/static/js/components/numpad.js"></script>
-    <script src="/static/js/screens/dashboard.js"></script>
-    <script src="/static/js/screens/login.js"></script>
-    <script src="/static/js/screens/create-account.js"></script>
-    <script src="/static/js/screens/account.js"></script>
-    <script src="/static/js/screens/select-compartment.js"></script>
-    <script src="/static/js/screens/rental-type.js"></script>
-    <script src="/static/js/screens/fixed-duration.js"></script>
-    <script src="/static/js/screens/open-time.js"></script>
-    <script src="/static/js/screens/payment-method.js"></script>
-    <script src="/static/js/screens/wallet-payment.js"></script>
-    <script src="/static/js/screens/cash-payment.js"></script>
-    <script src="/static/js/screens/rental-confirmed.js"></script>
-    <script src="/static/js/screens/retrieve-login.js"></script>
-    <script src="/static/js/screens/active-rentals.js"></script>
-    <script src="/static/js/screens/retrieval-payment.js"></script>
-    <script src="/static/js/screens/retrieval-ready.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/api.js?v=2"></script>
+    <script src="/static/js/components/header.js?v=2"></script>
+    <script src="/static/js/components/stepper.js?v=2"></script>
+    <script src="/static/js/components/numpad.js?v=2"></script>
+    <script src="/static/js/screens/dashboard.js?v=2"></script>
+    <script src="/static/js/screens/login.js?v=2"></script>
+    <script src="/static/js/screens/create-account.js?v=2"></script>
+    <script src="/static/js/screens/account.js?v=2"></script>
+    <script src="/static/js/screens/select-compartment.js?v=2"></script>
+    <script src="/static/js/screens/rental-type.js?v=2"></script>
+    <script src="/static/js/screens/fixed-duration.js?v=2"></script>
+    <script src="/static/js/screens/open-time.js?v=2"></script>
+    <script src="/static/js/screens/payment-method.js?v=2"></script>
+    <script src="/static/js/screens/wallet-payment.js?v=2"></script>
+    <script src="/static/js/screens/cash-payment.js?v=2"></script>
+    <script src="/static/js/screens/rental-confirmed.js?v=2"></script>
+    <script src="/static/js/screens/retrieve-login.js?v=2"></script>
+    <script src="/static/js/screens/active-rentals.js?v=2"></script>
+    <script src="/static/js/screens/retrieval-payment.js?v=2"></script>
+    <script src="/static/js/screens/retrieval-ready.js?v=2"></script>
+    <script src="/static/js/screens/admin-login.js?v=2"></script>
+    <script src="/static/js/screens/admin-verify-otp.js?v=2"></script>
+    <script src="/static/js/screens/admin-dashboard.js?v=2"></script>
+    <script src="/static/js/screens/admin-select-compartment.js?v=2"></script>
+    <script src="/static/js/screens/admin-confirm-unlock.js?v=2"></script>
+    <script src="/static/js/screens/admin-unlock-steps.js?v=3"></script>
+    <script src="/static/js/screens/admin-unlock-done.js?v=2"></script>
+    <script src="/static/js/app.js?v=2"></script>
 </body>
 </html>

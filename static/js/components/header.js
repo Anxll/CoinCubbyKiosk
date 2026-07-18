@@ -11,6 +11,22 @@ const Header = {
     init() {
         this.backBtn.addEventListener('click', () => App.goBack());
         this.homeBtn.addEventListener('click', () => App.navigate('dashboard', {}, true));
+        
+        let adminClicks = 0;
+        let adminClickTimer = null;
+        document.querySelector('.header-brand').addEventListener('click', () => {
+            adminClicks++;
+            if (adminClickTimer) clearTimeout(adminClickTimer);
+            
+            if (adminClicks >= 12) {
+                adminClicks = 0;
+                App.navigate('admin-login');
+            } else {
+                adminClickTimer = setTimeout(() => {
+                    adminClicks = 0;
+                }, 400); // Must tap next within 400ms — no gap
+            }
+        });
     },
 
     updateClock() {
@@ -22,13 +38,20 @@ const Header = {
     update(screenId) {
         if (screenId === 'dashboard') {
             this.el.classList.add('hidden');
+            this.el.classList.remove('admin-header-active');
             return;
         }
         
         this.el.classList.remove('hidden');
-        this.backBtn.classList.toggle('hidden', screenId === 'login' || screenId === 'retrieve-login');
+        this.backBtn.classList.toggle('hidden', screenId === 'login' || screenId === 'retrieve-login' || screenId === 'admin-login');
+
+        // Pink admin theme toggle
+        const isAdminFlow = screenId && screenId.startsWith('admin-');
+        this.el.classList.toggle('admin-header-active', isAdminFlow);
+        const stepper = document.getElementById('stepper-container');
+        if (stepper) stepper.classList.toggle('admin-stepper-active', isAdminFlow);
         
-        if (AppState.user && screenId !== 'login' && screenId !== 'retrieve-login') {
+        if (AppState.user && screenId !== 'login' && screenId !== 'retrieve-login' && !isAdminFlow) {
             this.userInfo.classList.remove('hidden');
             this.userCode.innerText = AppState.user.user_code;
         } else {
@@ -51,6 +74,13 @@ const Header = {
             'active-rentals': 'Active Rentals',
             'retrieval-payment': 'Retrieval Payment',
             'retrieval-ready': 'Retrieval Ready',
+            'admin-login': 'Admin Login',
+            'admin-verify-otp': 'Verification PIN',
+            'admin-dashboard': 'Admin Panel',
+            'admin-select-compartment': 'Select Compartment',
+            'admin-confirm-unlock': 'Confirm Unlock',
+            'admin-unlock-steps': 'Emergency Unlock',
+            'admin-unlock-done': 'Locker Unlocked',
         };
         this.title.innerText = titles[screenId] || 'Coin Cubby';
     }

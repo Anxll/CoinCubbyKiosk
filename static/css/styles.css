@@ -744,13 +744,14 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 .legend-occupied { background-color: var(--status-occupied); }
 .legend-maintenance { background-color: var(--status-maintenance); }
 
-/* Scrollable center area */
+/* Center area — card centred both ways */
 .comp-center-area {
     flex: 1;
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: 0 16px;
-    overflow: hidden; /* Prevent scrolling */
+    overflow: hidden;
 }
 
 /* White card wrapper */
@@ -1404,4 +1405,396 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     font-weight: 800;
     color: var(--accent-orange);
     line-height: 1;
+}
+
+/* ============================================================
+   ADMIN LOGIN — PINK THEME
+   All rules scoped to #screen-admin-login only.
+   Nothing in the regular user flow is affected.
+   ============================================================ */
+
+/* Pink CSS variables for admin */
+:root {
+    --admin-pink:        #D81B60;
+    --admin-pink-dark:   #880E4F;
+    --admin-pink-light:  #FCE4EC;
+    --admin-pink-mid:    #F48FB1;
+}
+
+/* Screen background */
+#screen-admin-login {
+    background-color: #FFF0F5;
+}
+
+/* Active digit-box border + glow */
+#screen-admin-login .input-group-active .digit-box.active {
+    border-color: var(--admin-pink) !important;
+    box-shadow: 0 0 0 4px var(--admin-pink-light) !important;
+}
+
+/* ADMIN ID / ADMIN PASSWORD label when active */
+#screen-admin-login .input-group-active .input-label {
+    color: var(--admin-pink) !important;
+}
+
+/* CONTINUE (primary) button */
+#screen-admin-login .btn-primary {
+    background-color: var(--admin-pink) !important;
+    box-shadow: 0 4px 6px rgba(216, 27, 96, 0.25) !important;
+}
+
+#screen-admin-login .btn-primary:active {
+    background-color: var(--admin-pink-dark) !important;
+}
+
+/* EXIT (outline) button — pink border + text */
+#screen-admin-login .btn-outline {
+    color: var(--admin-pink) !important;
+    border-color: var(--admin-pink-mid) !important;
+}
+
+/* Header brand icon + home button turn pink while admin-login is showing */
+.admin-header-active .brand-icon {
+    background-color: var(--admin-pink) !important;
+}
+
+.admin-header-active .header-icon-btn {
+    color: var(--admin-pink) !important;
+    background-color: var(--admin-pink-light) !important;
+}
+
+.admin-header-active .header-title {
+    color: var(--admin-pink) !important;
+}
+
+.admin-header-active .brand-icon {
+    background-color: var(--admin-pink) !important;
+}
+
+/* Stepper active step becomes pink on admin screen */
+.admin-stepper-active .step.active .step-indicator,
+.admin-stepper-active .step.completed .step-indicator {
+    background-color: var(--admin-pink) !important;
+}
+
+.admin-stepper-active .step-line.completed {
+    background-color: var(--admin-pink) !important;
+}
+
+/* ==========================================================================
+   ADMIN FLOW (PINK THEME)
+   ========================================================================== */
+:root {
+    --admin-pink: #E91E63;
+    --admin-pink-light: #FCE4EC;
+    --admin-pink-dark: #C2185B;
+    --admin-pink-hover: #D81B60;
+}
+
+.admin-title-pink {
+    color: var(--admin-pink);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.admin-btn-pink {
+    background-color: var(--admin-pink);
+    color: white;
+}
+
+.admin-btn-pink:hover {
+    background-color: var(--admin-pink-hover);
+}
+
+.admin-btn-pink:disabled {
+    background-color: var(--grey-medium);
+}
+
+/* Admin Dashboard */
+.admin-dash-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.admin-dash-icon {
+    width: 64px;
+    height: 64px;
+    background-color: var(--admin-pink-light);
+    color: var(--admin-pink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 16px;
+}
+.admin-dash-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.admin-dash-sub {
+    color: var(--text-muted);
+}
+.admin-dash-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+.admin-action-card {
+    background-color: white;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+.admin-action-card:hover {
+    border-color: var(--admin-pink);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.1);
+}
+.admin-action-icon {
+    width: 48px;
+    height: 48px;
+    background-color: var(--admin-pink-light);
+    color: var(--admin-pink);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.admin-action-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.admin-action-text strong {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+.admin-action-text span {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+.admin-action-arrow {
+    color: var(--grey-medium);
+}
+.admin-exit-btn {
+    width: 100%;
+    color: var(--admin-pink);
+    border-color: var(--admin-pink);
+}
+.admin-legend-badge {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--admin-pink-light);
+    color: var(--admin-pink);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.admin-module-circle {
+    background-color: var(--admin-pink) !important;
+}
+.admin-page-indicator {
+    color: var(--admin-pink) !important;
+}
+
+
+/* Admin Compartments — all statuses clickable in admin flow */
+.admin-selectable-available {
+    cursor: pointer;
+    pointer-events: auto !important;
+}
+.admin-selectable-occupied {
+    cursor: pointer;
+    pointer-events: auto !important;
+    border: 2px solid var(--status-occupied);
+    background-color: white;
+}
+.admin-selectable-maintenance {
+    cursor: pointer;
+    pointer-events: auto !important;
+}
+.admin-comp-selected {
+    box-shadow: 0 0 0 6px rgba(233, 30, 99, 0.2) !important;
+    border-color: var(--admin-pink) !important;
+    background-color: var(--admin-pink-light) !important;
+    color: var(--admin-pink) !important;
+}
+
+/* Admin Confirm & Summary */
+
+.admin-warning-banner {
+    background-color: #FFF3E0;
+    color: #E65100;
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.admin-confirm-card {
+    margin-bottom: 32px;
+}
+.admin-refund-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 16px;
+    font-style: italic;
+}
+
+/* Admin Steps */
+.admin-steps-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.admin-compartment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--admin-pink-light);
+    color: var(--admin-pink);
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+}
+.admin-steps-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+.admin-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+    overflow: visible;
+}
+.admin-step-item {
+    background-color: white;
+    border: 2px solid #E8E8F0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.admin-step-item:hover {
+    border-color: var(--admin-pink);
+    background-color: #FFF5F8;
+    transform: translateX(2px);
+}
+.admin-step-done {
+    border-color: var(--admin-pink) !important;
+    background-color: var(--admin-pink-light) !important;
+}
+.admin-step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.admin-step-number {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: #BDBDBD;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+}
+.admin-step-done .admin-step-number {
+    display: none;
+}
+.admin-step-check-icon {
+    color: var(--admin-pink);
+    font-size: 22px;
+}
+.admin-step-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--admin-pink-light), #fce4ec);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-pink);
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(233,30,99,0.15);
+}
+.admin-step-done .admin-step-icon-wrap {
+    background: linear-gradient(135deg, #fce4ec, var(--admin-pink));
+    color: white;
+    box-shadow: 0 4px 12px rgba(233,30,99,0.3);
+}
+.admin-step-content {
+    flex: 1;
+    min-width: 0;
+}
+.admin-step-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-dark);
+    margin-bottom: 3px;
+}
+.admin-step-done .admin-step-title {
+    color: var(--admin-pink);
+}
+.admin-step-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* Admin Done Screen */
+.admin-success-icon {
+    text-align: center;
+    color: var(--admin-pink);
+    margin-bottom: 16px;
+}
+.admin-success-icon .material-icons-round {
+    font-size: 80px;
+}
+.admin-success-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 32px;
+}
+.admin-done-note {
+    text-align: center;
+    margin: 24px 0 32px;
+    color: var(--text-muted);
+}
+
+/* Stepper Admin Overrides */
+.admin-step-active-indicator {
+    background-color: var(--admin-pink) !important;
+    color: white !important;
 }

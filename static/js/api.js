@@ -101,5 +101,29 @@ class ApiClient {
             body: JSON.stringify({ amount })
         });
     }
+
+    static async getCompartmentRental(compartmentId) {
+        return this.request(`/rentals/compartment/${compartmentId}/active`);
+    }
+
+    static async adminLogin(kiosk_admin_id, kiosk_admin_password) {
+        return this.request('/auth/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ kiosk_admin_id, kiosk_admin_password })
+        });
+    }
+
+    static async adminVerifyOtp(admin_id, verification_code) {
+        return this.request('/auth/admin/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ admin_id, verification_code })
+        });
+    }
+
+    static async adminEmergencyUnlock(compartmentId) {
+        return this.request(`/rentals/compartment/${compartmentId}/emergency-unlock`, {
+            method: 'POST'
+        });
+    }
 }
 window.Api = ApiClient;

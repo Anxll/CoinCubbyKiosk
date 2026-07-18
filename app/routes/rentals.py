@@ -342,3 +342,112 @@ def retrieve_rental(rental_id):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@rentals_bp.route('/compartment/<compartment_id>/active', methods=['GET'])
+@require_kiosk_token
+def get_compartment_active_rental(compartment_id):
+    """Fetch the active rental (transaction) for a specific compartment, if any."""
+    try:
+        db = get_supabase()
+        res = db.table('transactions').select('''
+            *,
+            customers (customer_id, full_name, user_id, email)
+        ''').eq('locker_id', compartment_id).eq('status', 'Active').execute()
+
+        if not res.data:
+            return jsonify({'success': True, 'rental': None})
+
+        rental_data = res.data[0]
+        
+        # Check payments for this transaction
+        payments_res = db.table('payments').select('amount').eq('transaction_id', rental_data['transaction_id']).execute()
+        amount_paid = 0.0
+        if payments_res.data:
+            amount_paid = sum(float(p['amount']) for p in payments_res.data)
+
+        customer = rental_data.get('customers') or {}
+
+        return jsonify({
+            'success': True,
+            'rental': {
+                'id': rental_data['transaction_id'],
+                'user_id': rental_data['customer_id'],
+                'user_code': customer.get('user_id', '—'),
+                'full_name': customer.get('full_name', '—'),
+                'compartment_id': rental_data['locker_id'],
+                'rental_type': 'fixed' if rental_data.get('duration_minutes') else 'open_time',
+                'start_time': rental_data['start_time'],
+                'amount_paid': amount_paid
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@rentals_bp.route('/compartment/<compartment_id>/emergency-unlock', methods=['POST'])
+@require_kiosk_token
+def emergency_unlock_compartment(compartment_id):
+    """Emergency unlock a compartment. Void rental & refund paid amount to user's wallet if active, then unlock door."""
+    try:
+        db = get_supabase()
+        
+        # 1. Look up any active transaction on this compartment
+        res = db.table('transactions').select('''
+            *,
+            customers (customer_id, full_name, user_id, email),
+            lockers (locker_number)
+        ''').eq('locker_id', compartment_id).eq('status', 'Active').execute()
+        
+        refunded_amount = 0.0
+        user_code = '—'
+        compartment_code = None
+        
+        if res.data:
+            rental = res.data[0]
+            customer_id = rental['customer_id']
+            transaction_id = rental['transaction_id']
+            user_code = rental.get('customers', {}).get('user_id', '—')
+            compartment_code = rental.get('lockers', {}).get('locker_number')
+            
+            # Find how much was paid in payments table
+            payments_res = db.table('payments').select('amount').eq('transaction_id', transaction_id).execute()
+            if payments_res.data:
+                refunded_amount = sum(float(p['amount']) for p in payments_res.data)
+                
+            # If there's an amount to refund, credit the user's wallet
+            if refunded_amount > 0:
+                from ..services.payment_service import _credit_wallet
+                credit_res = _credit_wallet(customer_id, refunded_amount)
+                if not credit_res.get('success'):
+                    return jsonify({'error': f"Failed to refund wallet: {credit_res.get('error')}"}), 500
+            
+            # Update transaction status to 'Cancelled'
+            db.table('transactions').update({'status': 'Cancelled'}).eq('transaction_id', transaction_id).execute()
+            
+        if not compartment_code:
+            # Look up compartment number directly
+            comp_res = db.table('lockers').select('locker_number').eq('locker_id', compartment_id).execute()
+            if comp_res.data:
+                compartment_code = comp_res.data[0]['locker_number']
+            else:
+                return jsonify({'error': 'Compartment not found'}), 404
+                
+        # 2. Unlock the door
+        try:
+            current_app.hardware.unlock_door(compartment_code)
+        except Exception as e:
+            return jsonify({'error': f"Failed to hardware unlock: {str(e)}"}), 500
+            
+        # 3. Mark the locker as Maintenance (under maintenance)
+        db.table('lockers').update({'status': 'Maintenance'}).eq('locker_id', compartment_id).execute()
+        
+        return jsonify({
+            'success': True,
+            'refunded_amount': refunded_amount,
+            'user_code': user_code,
+            'compartment_code': compartment_code
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
