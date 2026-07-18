@@ -2,18 +2,82 @@ window.AdminVerifyOtpScreen = {
     otp: '',
     generatedOtp: '',
     numpad: null,
+    timerInterval: null,
+    timeLeft: 60,
 
     init() {
         this.otp = '';
         this.generatedOtp = AppState.adminGeneratedOtp || '';
+        document.getElementById('admin-otp-error').innerText = '';
         this._renderBoxes();
+
+        // Clear any old timer before starting fresh
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+        this.startTimer();
 
         if (!this.numpad) {
             this.numpad = new Numpad('numpad-admin-otp', (key) => this.handleInput(key));
         }
 
-        // For demonstration, log the OTP or display it in console
         console.log("Admin OTP Generated:", this.generatedOtp);
+    },
+
+    startTimer() {
+        const self = this;
+        self.timeLeft = 60;
+
+        const timerText = document.getElementById('admin-otp-timer-text');
+        const resendBtn = document.getElementById('btn-admin-resend-otp');
+        const timerEl = document.getElementById('admin-otp-timer');
+
+        if (!timerEl) return;
+
+        timerText.style.display = 'inline-block';
+        resendBtn.style.display = 'none';
+        timerEl.innerText = self.timeLeft;
+
+        if (self.timerInterval) clearInterval(self.timerInterval);
+
+        self.timerInterval = setInterval(function () {
+            self.timeLeft--;
+            timerEl.innerText = self.timeLeft;
+
+            if (self.timeLeft <= 0) {
+                clearInterval(self.timerInterval);
+                self.timerInterval = null;
+                timerText.style.display = 'none';
+                resendBtn.style.display = 'inline-block';
+            }
+        }, 1000);
+    },
+
+    async resendOtp() {
+        App.showLoading('Resending verification code...');
+        const resendBtn = document.getElementById('btn-admin-resend-otp');
+        resendBtn.innerText = 'SENDING...';
+        resendBtn.disabled = true;
+
+        try {
+            const res = await Api.adminResendOtp(AppState.adminId);
+            if (!res.success) throw new Error('Failed to generate new OTP.');
+
+            // Update stored OTP for display
+            AppState.adminGeneratedOtp = res.generated_otp;
+            console.log("Admin OTP Resent:", res.generated_otp);
+
+            // Restart countdown
+            this.startTimer();
+        } catch (e) {
+            console.error(e);
+            document.getElementById('admin-otp-error').innerText = 'Failed to resend OTP: ' + (e.message || e);
+        } finally {
+            App.hideLoading();
+            resendBtn.innerText = 'RESEND CODE';
+            resendBtn.disabled = false;
+        }
     },
 
     handleInput(key) {
@@ -41,14 +105,18 @@ window.AdminVerifyOtpScreen = {
     },
 
     async submit() {
+        const errorEl = document.getElementById('admin-otp-error');
+        errorEl.innerText = '';
+        
         if (this.otp.length !== 6) {
-            alert('Please enter the 6-digit Verification PIN.');
+            errorEl.innerText = 'Please enter the 6-digit Verification PIN.';
             return;
         }
 
+        App.showLoading('Verifying verification PIN...');
         const btn = document.getElementById('btn-admin-verify-otp');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> VERIFYING...';
+        btn.innerHTML = '<span class="spinner-circle"></span> VERIFYING...';
 
         try {
             // Hit the Supabase backend to verify the OTP
@@ -60,10 +128,11 @@ window.AdminVerifyOtpScreen = {
             // Success, navigate to dashboard
             App.navigate('admin-dashboard');
         } catch (e) {
-            alert(e.message);
+            errorEl.innerText = e.message || 'Verification failed.';
             this.otp = '';
             this._renderBoxes();
         } finally {
+            App.hideLoading();
             btn.disabled = false;
             btn.innerHTML = 'VERIFY';
         }

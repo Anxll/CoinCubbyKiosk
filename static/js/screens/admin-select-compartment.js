@@ -12,6 +12,7 @@ window.AdminSelectCompartmentScreen = {
     },
 
     async loadCompartments() {
+        App.showLoading('Loading compartments...');
         try {
             const moduleName = this.modules[this.currentModuleIdx];
             document.getElementById('admin-module-circle-id').innerText = moduleName;
@@ -26,6 +27,8 @@ window.AdminSelectCompartmentScreen = {
             this.renderGrid();
         } catch (e) {
             console.error('Admin compartment load error:', e);
+        } finally {
+            App.hideLoading();
         }
     },
 

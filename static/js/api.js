@@ -125,5 +125,12 @@ class ApiClient {
             method: 'POST'
         });
     }
+
+    static async adminResendOtp(admin_id) {
+        return this.request('/auth/admin/resend-otp', {
+            method: 'POST',
+            body: JSON.stringify({ admin_id })
+        });
+    }
 }
 window.Api = ApiClient;

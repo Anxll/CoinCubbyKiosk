@@ -8,6 +8,7 @@ window.AdminLoginScreen = {
         this.userId = '';
         this.pin = '';
         this.activeInput = 'userid';
+        document.getElementById('admin-login-error').innerText = '';
 
         this._render();
 
@@ -68,14 +69,17 @@ window.AdminLoginScreen = {
     },
 
     async submit() {
+        const errorEl = document.getElementById('admin-login-error');
+        errorEl.innerText = '';
         if (this.userId.length !== 6 || this.pin.length !== 6) {
-            alert('Please enter complete Admin ID and Password.');
+            errorEl.innerText = 'Please enter complete Admin ID and Password.';
             return;
         }
 
+        App.showLoading('Verifying Admin Credentials...');
         const btn = document.getElementById('btn-admin-continue');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> VERIFYING...';
+        btn.innerHTML = '<span class="spinner-circle"></span> VERIFYING...';
 
         try {
             // Call the real API
@@ -92,8 +96,9 @@ window.AdminLoginScreen = {
             // Navigate to OTP verify screen
             App.navigate('admin-verify-otp');
         } catch (e) {
-            alert(e.message);
+            errorEl.innerText = e.message || 'Login failed.';
         } finally {
+            App.hideLoading();
             btn.disabled = false;
             btn.innerHTML = 'CONTINUE';
         }

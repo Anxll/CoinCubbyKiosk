@@ -145,5 +145,21 @@ class AppController {
             this.navigate('dashboard', {}, true);
         }
     }
+
+    showLoading(text = 'Loading...') {
+        const overlay = document.getElementById('global-loading');
+        if (overlay) {
+            const textEl = document.getElementById('global-loading-text');
+            if (textEl) textEl.innerText = text;
+            overlay.classList.add('active');
+        }
+    }
+
+    hideLoading() {
+        const overlay = document.getElementById('global-loading');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+    }
 }
 window.App = new AppController();

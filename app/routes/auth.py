@@ -179,3 +179,42 @@ def admin_verify_otp():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/admin/resend-otp', methods=['POST'])
+@require_kiosk_token
+def admin_resend_otp():
+    """Generate a fresh OTP for the admin (resend flow)."""
+    data = request.get_json()
+    admin_uuid = data.get('admin_id', '').strip()
+
+    if not admin_uuid:
+        return jsonify({'error': 'Admin ID is required'}), 400
+
+    try:
+        db = get_supabase()
+
+        # Expire any existing pending OTPs for this admin
+        db.table('kiosk_verification_codes') \
+            .update({'status': 'Expired'}) \
+            .eq('admin_id', admin_uuid) \
+            .eq('status', 'Pending') \
+            .execute()
+
+        # Generate a fresh 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        expires_at = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+
+        db.table('kiosk_verification_codes').insert({
+            'admin_id': admin_uuid,
+            'verification_code': otp,
+            'status': 'Pending',
+            'expires_at': expires_at
+        }).execute()
+
+        return jsonify({
+            'success': True,
+            'generated_otp': otp  # For display/testing only
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

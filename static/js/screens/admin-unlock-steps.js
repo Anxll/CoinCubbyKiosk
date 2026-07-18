@@ -23,8 +23,7 @@ window.AdminUnlockStepsScreen = {
         if (!comp) return App.navigate('admin-select-compartment');
 
         document.getElementById('admin-steps-compartment-badge').innerText = `Compartment ${comp.code}`;
-        // Button is ALWAYS enabled immediately — no checklist gate required
-        document.getElementById('btn-admin-complete-unlock').disabled = false;
+        document.getElementById('admin-steps-error').innerText = '';
         this.completedSteps = new Set();
         this.renderSteps();
     },
@@ -50,7 +49,7 @@ window.AdminUnlockStepsScreen = {
                     </div>
                     <div class="admin-step-content">
                         <div class="admin-step-title">${step.title}</div>
-                        <div class="admin-step-desc">${step.desc}</div>
+                        <div class="admin-step-desc" style="font-size: 13px;">${step.desc}</div>
                     </div>
                 </div>
             `;
@@ -66,15 +65,17 @@ window.AdminUnlockStepsScreen = {
             this.completedSteps.add(idx);
         }
         this.renderSteps();
-        // Button always stays enabled regardless of checklist state
-        document.getElementById('btn-admin-complete-unlock').disabled = false;
     },
 
     async completeUnlock() {
+        const errEl = document.getElementById('admin-steps-error');
+        errEl.innerText = '';
         const comp = AppState.adminSelectedCompartment;
         const btn = document.getElementById('btn-admin-complete-unlock');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> PROCESSING...';
+        btn.innerHTML = '<span class="spinner-circle"></span> CONFIRMING...';
+
+        App.showLoading('Emergency unlocking...');
 
         try {
             // Call API to emergency-unlock and void/refund if occupied
@@ -89,9 +90,11 @@ window.AdminUnlockStepsScreen = {
             });
         } catch (e) {
             console.error('Emergency unlock error:', e);
-            alert('Failed to execute unlock: ' + (e.message || e));
+            errEl.innerText = 'Failed to execute unlock: ' + (e.message || e);
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+        } finally {
+            App.hideLoading();
         }
     }
 };

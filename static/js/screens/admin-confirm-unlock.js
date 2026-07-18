@@ -5,7 +5,17 @@ window.AdminConfirmUnlockScreen = {
         const comp = AppState.adminSelectedCompartment;
         if (!comp) return App.navigate('admin-select-compartment');
 
+        App.showLoading('Fetching compartment details...');
+
         document.getElementById('admin-confirm-compartment').innerText = comp.code || '—';
+        document.getElementById('admin-confirm-module').innerText =
+            comp.module ? `Module ${comp.module}` : '—';
+            
+        // Show loading state while fetching
+        document.getElementById('admin-confirm-user').innerText = 'Loading...';
+        document.getElementById('admin-confirm-type').innerText = 'Loading...';
+        document.getElementById('admin-confirm-start').innerText = 'Loading...';
+        document.getElementById('admin-confirm-refund').innerHTML = '<span style="color:var(--text-muted)">Calculating...</span>';
 
         // Try to fetch rental info for the occupied compartment
         try {
@@ -38,10 +48,16 @@ window.AdminConfirmUnlockScreen = {
             document.getElementById('admin-confirm-start').innerText = 'N/A';
             document.getElementById('admin-confirm-refund').innerHTML = '<strong>₱0.00</strong>';
             this.rental = null;
+        } finally {
+            App.hideLoading();
         }
     },
 
     proceed() {
-        App.navigate('admin-unlock-steps');
+        App.showLoading('Preparing unlock steps...');
+        setTimeout(() => {
+            App.navigate('admin-unlock-steps');
+            App.hideLoading();
+        }, 600);
     }
 };
