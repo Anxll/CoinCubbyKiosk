@@ -7,5 +7,14 @@ window.AdminUnlockDoneScreen = {
         const refund = parseFloat(AppState.adminUnlockRefund || 0);
         document.getElementById('admin-done-refund').innerHTML =
             `<strong>₱${refund.toFixed(2)}</strong>`;
+    },
+
+    backToPanel() {
+        App.showAdminLoading('Loading...');
+        setTimeout(() => {
+            AppState.adminSelectedCompartment = null;
+            App.navigate('admin-dashboard');
+            App.hideAdminLoading();
+        }, 400);
     }
 };

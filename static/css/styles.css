@@ -1701,8 +1701,11 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 .admin-steps-footer {
     flex-shrink: 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     padding-top: 16px;
+    width: 100%;
+    gap: 4px;
 }
 .admin-steps-list {
     display: flex;
@@ -1788,7 +1791,6 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     align-items: center;
 }
 .admin-step-title {
-.admin-step-title {
     font-weight: 700;
     font-size: 15px;
     color: var(--text-dark);
@@ -1854,49 +1856,176 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 
 /* Global Loading Dialog */
 .global-loading-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 600;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.25s ease;
 }
 .global-loading-overlay.active {
+    display: flex;
     opacity: 1;
     pointer-events: all;
 }
 .global-loading-box {
-    background-color: white;
-    border-radius: 16px;
-    padding: 32px 48px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    transform: translateY(20px);
-    transition: transform 0.2s ease;
+    gap: 24px;
 }
 .global-loading-overlay.active .global-loading-box {
     transform: translateY(0);
 }
+
+/* Classic White Spinner */
 .global-loading-spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid #E8E8F0;
-    border-top-color: var(--admin-pink);
+    width: 64px;
+    height: 64px;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
     border-radius: 50%;
     animation: spin-circle 1s linear infinite;
 }
-.global-loading-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-dark);
+@keyframes spin-circle {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
+.global-loading-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.05em;
+}
+
+/* Admin Loading Overlay — scoped inside #kiosk-app, below the header */
+.admin-loading-overlay {
+    position: absolute;
+    top: var(--header-height);
+    left: 0;
+    width: 100%;
+    height: calc(100% - var(--header-height));
+    background-color: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.admin-loading-overlay.active {
+    display: flex;
+    opacity: 1;
+    pointer-events: all;
+}
+.admin-loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+.admin-loading-spinner {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(var(--admin-pink, #ff4a8d) 0%, rgba(255, 74, 141, 0.1) 70%, transparent 100%);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
+    animation: admin-spin 1s linear infinite;
+}
+.admin-loading-spinner::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 36px; /* (80px - 8px) / 2 */
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--admin-pink, #ff4a8d);
+}
+@keyframes admin-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.admin-loading-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: #4a4a4a;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+
+/* Global Dialog Overlay */
+.global-dialog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.global-dialog-overlay.active {
+    display: flex;
+    opacity: 1;
+    pointer-events: all;
+}
+.global-dialog-box {
+    background-color: white;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    transform: translateY(20px);
+    transition: transform 0.2s ease;
+}
+.global-dialog-overlay.active .global-dialog-box {
+    transform: translateY(0);
+}
+.global-dialog-icon {
+    font-size: 48px;
+    color: var(--status-occupied);
+}
+.global-dialog-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0;
+}
+.global-dialog-message {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+.global-dialog-btn {
+    margin-top: 8px;
+    width: 100%;
+}
+

@@ -40,6 +40,21 @@ class AppController {
         document.addEventListener('keydown', () => this.resetTimeout());
         this.navigate('dashboard', {flow: 'rent'}, true);
         
+        // Setup listener for admin loading triggers
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-admin-loading]');
+            if (btn) {
+                this.showAdminLoading();
+                const duration = btn.getAttribute('data-loading-duration');
+                if (duration) {
+                    setTimeout(() => this.hideAdminLoading(), parseInt(duration));
+                } else {
+                    // Default fallback of 2.5 seconds for simple simulation
+                    setTimeout(() => this.hideAdminLoading(), 2500);
+                }
+            }
+        });
+
         // Update header clock
         setInterval(() => Header.updateClock(), 1000);
         Header.updateClock();
@@ -151,6 +166,7 @@ class AppController {
         if (overlay) {
             const textEl = document.getElementById('global-loading-text');
             if (textEl) textEl.innerText = text;
+            overlay.style.display = 'flex';
             overlay.classList.add('active');
         }
     }
@@ -159,6 +175,53 @@ class AppController {
         const overlay = document.getElementById('global-loading');
         if (overlay) {
             overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        }
+    }
+
+    showAdminLoading(text = 'Loading.') {
+        const overlay = document.getElementById('admin-loading');
+        if (overlay) {
+            const textEl = overlay.querySelector('.admin-loading-text');
+            if (textEl) textEl.innerText = text;
+            overlay.style.display = 'flex';
+            // Force reflow
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    hideAdminLoading() {
+        const overlay = document.getElementById('admin-loading');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                if (!overlay.classList.contains('active')) {
+                    overlay.style.display = 'none';
+                }
+            }, 300);
+        }
+    }
+
+    showDialog(message, title = 'Alert', icon = 'warning') {
+        const overlay = document.getElementById('global-dialog');
+        if (overlay) {
+            const msgEl = document.getElementById('global-dialog-message');
+            const titleEl = document.getElementById('global-dialog-title');
+            const iconEl = document.getElementById('global-dialog-icon');
+            if (msgEl) msgEl.innerText = message;
+            if (titleEl) titleEl.innerText = title;
+            if (iconEl) iconEl.innerText = icon;
+            overlay.style.display = 'flex';
+            overlay.classList.add('active');
+        }
+    }
+
+    hideDialog() {
+        const overlay = document.getElementById('global-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
         }
     }
 }

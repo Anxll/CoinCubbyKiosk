@@ -22,14 +22,25 @@ window.AdminUnlockStepsScreen = {
         const comp = AppState.adminSelectedCompartment;
         if (!comp) return App.navigate('admin-select-compartment');
 
-        document.getElementById('admin-steps-compartment-badge').innerText = `Compartment ${comp.code}`;
-        document.getElementById('admin-steps-error').innerText = '';
+        const badge = document.getElementById('admin-steps-compartment-badge');
+        if (badge) badge.innerText = `Compartment ${comp.code}`;
+        const errEl = document.getElementById('admin-steps-error');
+        if (errEl) errEl.innerText = '';
+
+        // Always reset the confirm button so second unlock doesn't find it stuck disabled
+        const btn = document.getElementById('btn-admin-complete-unlock');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+        }
+
         this.completedSteps = new Set();
         this.renderSteps();
     },
 
     renderSteps() {
         const container = document.getElementById('admin-steps-list');
+        if (!container) return;
         let html = '';
 
         this.steps.forEach((step, idx) => {
@@ -69,13 +80,13 @@ window.AdminUnlockStepsScreen = {
 
     async completeUnlock() {
         const errEl = document.getElementById('admin-steps-error');
-        errEl.innerText = '';
+        if (errEl) errEl.innerText = '';
         const comp = AppState.adminSelectedCompartment;
         const btn = document.getElementById('btn-admin-complete-unlock');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-circle"></span> CONFIRMING...';
+        btn.innerHTML = 'CONFIRMING...';
 
-        App.showLoading('Emergency unlocking...');
+        App.showAdminLoading('Emergency unlocking...');
 
         try {
             // Call API to emergency-unlock and void/refund if occupied
@@ -90,11 +101,11 @@ window.AdminUnlockStepsScreen = {
             });
         } catch (e) {
             console.error('Emergency unlock error:', e);
-            errEl.innerText = 'Failed to execute unlock: ' + (e.message || e);
+            if (errEl) errEl.innerText = 'Failed to execute unlock: ' + (e.message || e);
+        } finally {
+            App.hideAdminLoading();
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
-        } finally {
-            App.hideLoading();
         }
     }
 };

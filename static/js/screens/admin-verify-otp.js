@@ -8,7 +8,6 @@ window.AdminVerifyOtpScreen = {
     init() {
         this.otp = '';
         this.generatedOtp = AppState.adminGeneratedOtp || '';
-        document.getElementById('admin-otp-error').innerText = '';
         this._renderBoxes();
 
         // Clear any old timer before starting fresh
@@ -55,10 +54,10 @@ window.AdminVerifyOtpScreen = {
     },
 
     async resendOtp() {
-        App.showLoading('Resending verification code...');
         const resendBtn = document.getElementById('btn-admin-resend-otp');
         resendBtn.innerText = 'SENDING...';
         resendBtn.disabled = true;
+        App.showAdminLoading('Loading...');
 
         try {
             const res = await Api.adminResendOtp(AppState.adminId);
@@ -72,9 +71,9 @@ window.AdminVerifyOtpScreen = {
             this.startTimer();
         } catch (e) {
             console.error(e);
-            document.getElementById('admin-otp-error').innerText = 'Failed to resend OTP: ' + (e.message || e);
+            App.showDialog('Failed to resend OTP: ' + (e.message || e), 'Resend Failed');
         } finally {
-            App.hideLoading();
+            App.hideAdminLoading();
             resendBtn.innerText = 'RESEND CODE';
             resendBtn.disabled = false;
         }
@@ -105,34 +104,47 @@ window.AdminVerifyOtpScreen = {
     },
 
     async submit() {
-        const errorEl = document.getElementById('admin-otp-error');
-        errorEl.innerText = '';
-        
         if (this.otp.length !== 6) {
-            errorEl.innerText = 'Please enter the 6-digit Verification PIN.';
+            App.showDialog('Please enter the 6-digit Verification PIN.', 'Verification Required');
             return;
         }
 
-        App.showLoading('Verifying verification PIN...');
         const btn = document.getElementById('btn-admin-verify-otp');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-circle"></span> VERIFYING...';
+        btn.innerHTML = 'VERIFYING...';
+        App.showAdminLoading('Loading...');
 
         try {
-            // Hit the Supabase backend to verify the OTP
-            const res = await Api.adminVerifyOtp(AppState.adminId, this.otp);
+            const response = await fetch('/api/auth/admin/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Kiosk-Token': document.querySelector('meta[name="kiosk-api-token"]')?.content || ''
+                },
+                body: JSON.stringify({
+                    admin_id: AppState.adminId,
+                    verification_code: this.otp
+                })
+            });
+
+            const res = await response.json();
+            console.log('OTP verification response:', res);
+
+            if (!response.ok) {
+                throw new Error(res.error || 'Invalid Verification PIN. Access Denied.');
+            }
+
             if (!res.success) {
                 throw new Error('Invalid Verification PIN. Access Denied.');
             }
 
-            // Success, navigate to dashboard
             App.navigate('admin-dashboard');
         } catch (e) {
-            errorEl.innerText = e.message || 'Verification failed.';
+            App.showDialog(e.message || 'Verification failed.', 'Verification Failed');
             this.otp = '';
             this._renderBoxes();
         } finally {
-            App.hideLoading();
+            App.hideAdminLoading();
             btn.disabled = false;
             btn.innerHTML = 'VERIFY';
         }

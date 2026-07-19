@@ -7,12 +7,14 @@ window.AdminSelectCompartmentScreen = {
     async init() {
         this.currentModuleIdx = 0;
         this.selectedCompartment = null;
+        AppState.adminSelectedCompartment = null;
         document.getElementById('btn-admin-confirm-compartment').disabled = true;
         await this.loadCompartments();
     },
 
     async loadCompartments() {
-        App.showLoading('Loading compartments...');
+        App.showAdminLoading('Loading compartments...');
+
         try {
             const moduleName = this.modules[this.currentModuleIdx];
             document.getElementById('admin-module-circle-id').innerText = moduleName;
@@ -28,7 +30,7 @@ window.AdminSelectCompartmentScreen = {
         } catch (e) {
             console.error('Admin compartment load error:', e);
         } finally {
-            App.hideLoading();
+            App.hideAdminLoading();
         }
     },
 
@@ -123,6 +125,10 @@ window.AdminSelectCompartmentScreen = {
 
     confirm() {
         if (!this.selectedCompartment) return;
-        App.navigate('admin-confirm-unlock', { adminSelectedCompartment: this.selectedCompartment });
+        App.showAdminLoading('Loading...');
+        setTimeout(() => {
+            App.navigate('admin-confirm-unlock', { adminSelectedCompartment: this.selectedCompartment });
+            App.hideAdminLoading();
+        }, 400);
     }
 };

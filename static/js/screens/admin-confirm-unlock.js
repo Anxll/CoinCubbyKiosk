@@ -5,8 +5,6 @@ window.AdminConfirmUnlockScreen = {
         const comp = AppState.adminSelectedCompartment;
         if (!comp) return App.navigate('admin-select-compartment');
 
-        App.showLoading('Fetching compartment details...');
-
         document.getElementById('admin-confirm-compartment').innerText = comp.code || '—';
         document.getElementById('admin-confirm-module').innerText =
             comp.module ? `Module ${comp.module}` : '—';
@@ -48,16 +46,14 @@ window.AdminConfirmUnlockScreen = {
             document.getElementById('admin-confirm-start').innerText = 'N/A';
             document.getElementById('admin-confirm-refund').innerHTML = '<strong>₱0.00</strong>';
             this.rental = null;
-        } finally {
-            App.hideLoading();
         }
     },
 
     proceed() {
-        App.showLoading('Preparing unlock steps...');
+        App.showAdminLoading('Loading...');
         setTimeout(() => {
             App.navigate('admin-unlock-steps');
-            App.hideLoading();
-        }, 600);
+            App.hideAdminLoading();
+        }, 400);
     }
 };

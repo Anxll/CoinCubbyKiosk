@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css?v=3">
+    <link rel="stylesheet" href="/static/css/styles.css?v=9">
 </head>
 <body>
     <div id="kiosk-app">
@@ -84,7 +84,6 @@
                             <label>ENTER ADMIN PASSWORD</label>
                             <div class="digit-boxes" id="admin-pin-boxes"></div>
                         </div>
-                        <div id="admin-login-error" style="color: var(--status-occupied); text-align: center; margin-bottom: 16px; font-weight: 600; min-height: 20px;"></div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.navigate('dashboard')">EXIT</button>
                             <button id="btn-admin-continue" class="btn btn-primary" onclick="AdminLoginScreen.submit()">CONTINUE</button>
@@ -111,8 +110,7 @@
                             <span id="admin-otp-timer-text" style="color: var(--text-muted); font-size: 14px;">Resend code in <strong id="admin-otp-timer">60</strong>s</span>
                             <button id="btn-admin-resend-otp" class="btn btn-text" style="display: none; margin: 0 auto; padding: 4px 12px; color: var(--admin-pink); font-weight: 700; background: transparent;" onclick="AdminVerifyOtpScreen.resendOtp()">RESEND CODE</button>
                         </div>
-                        <div id="admin-otp-error" style="color: var(--status-occupied); text-align: center; margin-top: 16px; font-weight: 600; min-height: 20px;"></div>
-                        <div class="login-buttons" style="margin-top: 16px;">
+                        <div class="login-buttons" style="margin-top: 40px;">
                             <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
                             <button id="btn-admin-verify-otp" class="btn admin-btn-pink" onclick="AdminVerifyOtpScreen.submit()">VERIFY</button>
                         </div>
@@ -578,7 +576,7 @@
                         <p class="admin-dash-sub">Select an operation to perform</p>
                     </div>
                     <div class="admin-dash-actions">
-                        <button class="admin-action-card" onclick="App.navigate('admin-select-compartment')">
+                        <button class="admin-action-card" onclick="AdminDashboardScreen.goToUnlock()">
                             <div class="admin-action-icon">
                                 <span class="material-icons-round">lock_open</span>
                             </div>
@@ -589,7 +587,7 @@
                             <span class="material-icons-round admin-action-arrow">chevron_right</span>
                         </button>
                     </div>
-                    <button class="btn btn-outline admin-exit-btn" onclick="App.navigate('dashboard', {}, true)">
+                    <button class="btn btn-outline admin-exit-btn" onclick="AdminDashboardScreen.exitAdmin()">
                         <span class="material-icons-round">logout</span> EXIT ADMIN
                     </button>
                 </div>
@@ -673,7 +671,7 @@
                         <p class="admin-refund-note">If occupied, this amount will be automatically credited to the user's wallet. Otherwise ₱0.00 — no active rental.</p>
                     </div>
                     <div class="login-buttons">
-                        <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
+                        <button class="btn btn-outline" onclick="App.showAdminLoading('Loading...'); setTimeout(() => { App.goBack(); App.hideAdminLoading(); }, 400)">BACK</button>
                         <button id="btn-admin-proceed-unlock" class="btn admin-btn-pink" onclick="AdminConfirmUnlockScreen.proceed()">PROCEED TO UNLOCK</button>
                     </div>
                 </div>
@@ -696,7 +694,7 @@
                     </div>
                     <!-- Pinned bottom button -->
                     <div class="admin-steps-footer">
-                        <div id="admin-steps-error" style="color: var(--status-occupied); text-align: center; margin-bottom: 12px; font-weight: 600; min-height: 20px;"></div>
+                        <p id="admin-steps-error" style="color: var(--admin-pink); font-size: 13px; text-align: center; margin: 0 0 8px; min-height: 18px;"></p>
                         <button id="btn-admin-complete-unlock" class="btn admin-btn-pink btn-full" style="padding: 14px 40px; font-size: 16px;" onclick="AdminUnlockStepsScreen.completeUnlock()">
                             <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                         </button>
@@ -727,7 +725,7 @@
                         </div>
                     </div>
                     <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet automatically.</p>
-                    <button class="btn admin-btn-pink btn-full" onclick="App.navigate('admin-dashboard')">
+                    <button class="btn admin-btn-pink btn-full" onclick="AdminUnlockDoneScreen.backToPanel()">
                         <span class="material-icons-round">home</span> BACK TO ADMIN PANEL
                     </button>
                 </div>
@@ -743,10 +741,28 @@
         </div>
 
         <!-- === GLOBAL LOADING OVERLAY === -->
-        <div id="global-loading" class="global-loading-overlay">
+        <div id="global-loading" class="global-loading-overlay" style="display:none">
             <div class="global-loading-box">
                 <div class="global-loading-spinner"></div>
-                <div id="global-loading-text" class="global-loading-text">Loading...</div>
+                <div id="global-loading-text" class="global-loading-text">Loading.</div>
+            </div>
+        </div>
+
+        <!-- === GLOBAL DIALOG OVERLAY === -->
+        <div id="global-dialog" class="global-dialog-overlay" style="display:none">
+            <div class="global-dialog-box">
+                <span id="global-dialog-icon" class="material-icons-round global-dialog-icon">warning</span>
+                <h3 id="global-dialog-title" class="global-dialog-title">Alert</h3>
+                <p id="global-dialog-message" class="global-dialog-message">Something went wrong.</p>
+                <button class="btn btn-primary global-dialog-btn" onclick="App.hideDialog()">OK</button>
+            </div>
+        </div>
+
+        <!-- === ADMIN LOADING OVERLAY (inside #kiosk-app, centered below header) === -->
+        <div id="admin-loading" class="admin-loading-overlay" style="display:none">
+            <div class="admin-loading-box">
+                <div class="admin-loading-spinner"></div>
+                <div class="admin-loading-text">Loading.</div>
             </div>
         </div>
 
@@ -773,13 +789,13 @@
     <script src="/static/js/screens/active-rentals.js?v=2"></script>
     <script src="/static/js/screens/retrieval-payment.js?v=2"></script>
     <script src="/static/js/screens/retrieval-ready.js?v=2"></script>
-    <script src="/static/js/screens/admin-login.js?v=4"></script>
-    <script src="/static/js/screens/admin-verify-otp.js?v=5"></script>
-    <script src="/static/js/screens/admin-dashboard.js?v=2"></script>
-    <script src="/static/js/screens/admin-select-compartment.js?v=3"></script>
-    <script src="/static/js/screens/admin-confirm-unlock.js?v=4"></script>
-    <script src="/static/js/screens/admin-unlock-steps.js?v=5"></script>
-    <script src="/static/js/screens/admin-unlock-done.js?v=2"></script>
-    <script src="/static/js/app.js?v=4"></script>
+    <script src="/static/js/screens/admin-login.js?v=7"></script>
+    <script src="/static/js/screens/admin-verify-otp.js?v=8"></script>
+    <script src="/static/js/screens/admin-dashboard.js?v=3"></script>
+    <script src="/static/js/screens/admin-select-compartment.js?v=6"></script>
+    <script src="/static/js/screens/admin-confirm-unlock.js?v=7"></script>
+    <script src="/static/js/screens/admin-unlock-steps.js?v=10"></script>
+    <script src="/static/js/screens/admin-unlock-done.js?v=3"></script>
+    <script src="/static/js/app.js?v=7"></script>
 </body>
 </html>
