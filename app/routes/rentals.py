@@ -249,7 +249,13 @@ def get_active_rentals(user_id):
 @rentals_bp.route('/<rental_id>/retrieve', methods=['POST'])
 @require_kiosk_token
 def retrieve_rental(rental_id):
-    """Process rental retrieval — calculate final charges and unlock."""
+    """Process rental retrieval — calculate final charges and update DB status.
+
+    NOTE: This endpoint intentionally does NOT unlock the locker door.
+    The physical unlock happens only when the user explicitly clicks
+    'Confirm & Open Locker' on the retrieval-ready screen, which calls
+    POST /hardware/unlock/<compartment_code> directly.
+    """
     data = request.get_json() or {}
     payment_method = data.get('payment_method')  # needed if there are charges
     user_id = data.get('user_id')
@@ -317,20 +323,14 @@ def retrieve_rental(rental_id):
                 'duration_minutes': charges['elapsed_hours'] * 60
             }).eq('transaction_id', rental_id).execute()
 
-        # Unlock the compartment door DIRECTLY using hardware abstraction, ignore device_commands for now per user instruction
         compartment_code = rental['lockers']['locker_number']
-        device_code = rental['lockers'].get('module_id', '')
-        try:
-            current_app.hardware.unlock_door(compartment_code, device_code)
-        except Exception as e:
-            return jsonify({'error': f'Unable to unlock compartment: {e}'}), 500
 
-        # Update rental status after the door unlock succeeds
+        # Mark rental as completed and free the locker.
+        # The door unlock is NOT triggered here — it happens on the
+        # retrieval-ready screen when the user presses 'Confirm & Open Locker'.
         db.table('transactions').update({
             'status': 'Completed'
         }).eq('transaction_id', rental_id).execute()
-
-        # Free the locker after unlock succeeds
         db.table('lockers').update({'status': 'Available'}).eq('locker_id', rental['lockers']['locker_id']).execute()
 
         return jsonify({

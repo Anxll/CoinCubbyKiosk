@@ -57,7 +57,8 @@ window.AdminVerifyOtpScreen = {
         const resendBtn = document.getElementById('btn-admin-resend-otp');
         resendBtn.innerText = 'SENDING...';
         resendBtn.disabled = true;
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
 
         try {
             const res = await Api.adminResendOtp(AppState.adminId);
@@ -73,7 +74,8 @@ window.AdminVerifyOtpScreen = {
             console.error(e);
             App.showDialog('Failed to resend OTP: ' + (e.message || e), 'Resend Failed');
         } finally {
-            App.hideAdminLoading();
+            const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+            if (hideLoading) hideLoading.call(App);
             resendBtn.innerText = 'RESEND CODE';
             resendBtn.disabled = false;
         }
@@ -112,7 +114,8 @@ window.AdminVerifyOtpScreen = {
         const btn = document.getElementById('btn-admin-verify-otp');
         btn.disabled = true;
         btn.innerHTML = 'VERIFYING...';
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
 
         try {
             const response = await fetch('/api/auth/admin/verify-otp', {
@@ -144,7 +147,8 @@ window.AdminVerifyOtpScreen = {
             this.otp = '';
             this._renderBoxes();
         } finally {
-            App.hideAdminLoading();
+            const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+            if (hideLoading) hideLoading.call(App);
             btn.disabled = false;
             btn.innerHTML = 'VERIFY';
         }

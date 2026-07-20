@@ -27,8 +27,8 @@ window.WalletPaymentScreen = {
     async confirm() {
         const btn = document.getElementById('btn-wallet-confirm');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> PROCESSING...';
         AppState.paymentMethod = 'wallet';
+        App.showLoading('Processing payment...');
 
         try {
             if (AppState.flow === 'rent') {
@@ -39,16 +39,18 @@ window.WalletPaymentScreen = {
                     duration_hours: AppState.durationHours,
                     payment_method: 'wallet'
                 });
+                // Keep loading active — rental-confirmed init() will hide it after printing receipt
                 App.navigate('rental-confirmed', { paymentMethod: 'wallet' });
             } else {
                 // Retrieval flow
                 const res = await Api.retrieveRental(AppState.selectedRental.id, 'wallet', AppState.user.id);
+                // Keep loading active — retrieval-ready init() will hide it after printing receipt
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
+            App.hideLoading();
             alert(e.message);
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">check_circle</span> CONFIRM';
         }
     }
 };

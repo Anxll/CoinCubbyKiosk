@@ -76,7 +76,8 @@ window.AdminLoginScreen = {
         const btn = document.getElementById('btn-admin-continue');
         btn.disabled = true;
         btn.innerHTML = 'VERIFYING...';
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
 
         try {
             const res = await Api.adminLogin(this.userId, this.pin);
@@ -94,7 +95,8 @@ window.AdminLoginScreen = {
         } catch (e) {
             App.showDialog(e.message || 'Login failed. Please try again.', 'Admin Login');
         } finally {
-            App.hideAdminLoading();
+            const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+            if (hideLoading) hideLoading.call(App);
             btn.disabled = false;
             btn.innerHTML = 'CONTINUE';
         }

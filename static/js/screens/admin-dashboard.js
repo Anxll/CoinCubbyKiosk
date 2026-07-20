@@ -4,18 +4,22 @@ window.AdminDashboardScreen = {
     },
 
     goToUnlock() {
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
         setTimeout(() => {
             App.navigate('admin-select-compartment');
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
         }, 400);
     },
 
     exitAdmin() {
-        App.showAdminLoading('Exiting...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Exiting...');
         setTimeout(() => {
             App.navigate('dashboard', {}, true);
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
         }, 400);
     }
 };

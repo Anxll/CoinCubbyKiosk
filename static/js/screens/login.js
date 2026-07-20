@@ -2,19 +2,35 @@ window.LoginScreen = {
     userId: '',
     pin: '',
     activeInput: 'userid',
+    showPin: false,
     
     init() {
         this.userId = '';
         this.pin = '';
         this.activeInput = 'userid';
+        this.showPin = false;
         this.updateBoxes('userid', 6);
         this.updateBoxes('pin', 6);
+        this.updateToggleIcon();
         
         document.getElementById('userid-group').classList.add('input-group-active');
         document.getElementById('pin-group').classList.remove('input-group-active');
         
         if (!this.numpad) {
             this.numpad = new Numpad('numpad-rent', this.handleInput.bind(this));
+        }
+    },
+
+    togglePinVisibility() {
+        this.showPin = !this.showPin;
+        this.updateToggleIcon();
+        this.updateBoxes('pin', 6);
+    },
+
+    updateToggleIcon() {
+        const icon = document.getElementById('pin-visibility-icon');
+        if (icon) {
+            icon.innerText = this.showPin ? 'visibility_off' : 'visibility';
         }
     },
 
@@ -57,7 +73,9 @@ window.LoginScreen = {
         for (let i = 0; i < len; i++) {
             let active = (type === this.activeInput && i === val.length) ? 'active' : '';
             let char = val[i] || '';
-            if (type === 'pin' && char) char = '•';
+            if (type === 'pin' && char) {
+                char = this.showPin ? val[i] : '•';
+            }
             html += `<div class="digit-box ${active}">${char}</div>`;
         }
         boxes.innerHTML = html;
@@ -71,7 +89,7 @@ window.LoginScreen = {
         
         const btn = document.getElementById('btn-login-continue');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> LOADING...';
+        App.showLoading('Logging in...');
         
         try {
             const res = await Api.login(this.userId, this.pin);
@@ -79,8 +97,8 @@ window.LoginScreen = {
         } catch (e) {
             alert(e.message);
         } finally {
+            App.hideLoading();
             btn.disabled = false;
-            btn.innerHTML = 'CONTINUE';
         }
     }
 };

@@ -11,6 +11,7 @@ window.CompartmentScreen = {
     },
 
     async loadCompartments() {
+        App.showLoading('Loading compartments...');
         try {
             const moduleName = this.modules[this.currentModuleIdx];
             document.getElementById('module-circle-id').innerText = moduleName;
@@ -25,6 +26,8 @@ window.CompartmentScreen = {
             this.renderGrid();
         } catch (e) {
             console.error(e);
+        } finally {
+            App.hideLoading();
         }
     },
 

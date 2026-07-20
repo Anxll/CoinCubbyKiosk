@@ -8,6 +8,7 @@ window.FixedDurationScreen = {
         document.getElementById('btn-confirm-duration').disabled = true;
         AppState.durationHours = null;
         
+        App.showLoading('Loading pricing...');
         try {
             const pricing = await Api.getPricing(AppState.selectedCompartment.id);
             this.tiers = pricing.fixed_duration_tiers;
@@ -15,6 +16,8 @@ window.FixedDurationScreen = {
             this.renderGrid();
         } catch (e) {
             console.error(e);
+        } finally {
+            App.hideLoading();
         }
     },
 

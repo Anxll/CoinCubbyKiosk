@@ -1,8 +1,15 @@
 window.RetrievalReadyScreen = {
     async init() {
+        const btn = document.querySelector('#screen-retrieval-ready .btn-open-compartment');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+        }
+
         document.getElementById('retrieval-ready-code').innerText = AppState.compartmentCode;
         
-        // Print receipt
+        // Show/update loading while printing receipt (may already be showing from payment screen)
+        App.showLoading('Printing receipt...');
         try {
             await Api.printReceipt({
                 type: 'retrieval',
@@ -16,24 +23,39 @@ window.RetrievalReadyScreen = {
             });
         } catch (e) {
             console.error("Printer error:", e);
+        } finally {
+            // Add a slight delay so the printing loading screen is visible long enough
+            setTimeout(() => {
+                App.hideLoading();
+            }, 2500);
         }
     },
 
     async openCompartment() {
         const btn = document.querySelector('#screen-retrieval-ready .btn-open-compartment');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> UNLOCKING...';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = 'CONFIRMING...';
+        }
+        App.showLoading('Unlocking locker...');
         
         try {
             await Api.request(`/hardware/unlock/${AppState.compartmentCode}`, {
                 method: 'POST',
                 body: JSON.stringify({ device_code: AppState.selectedRental?.device_code || '' })
             });
-            App.navigate('dashboard', {}, true);
+            App.showLoading('Locker unlocked! Returning home...');
+            setTimeout(() => {
+                App.navigate('dashboard', {}, true);
+                App.hideLoading();
+            }, 1200);
         } catch (e) {
+            App.hideLoading();
             alert(e.message);
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">meeting_room</span> OPEN COMPARTMENT';
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+            }
         }
     }
 };

@@ -10,11 +10,13 @@ window.AdminUnlockDoneScreen = {
     },
 
     backToPanel() {
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
         setTimeout(() => {
             AppState.adminSelectedCompartment = null;
             App.navigate('admin-dashboard');
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
         }, 400);
     }
 };

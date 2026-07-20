@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=1024, height=600, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
     <meta name="kiosk-api-token" content="{{ kiosk_api_token }}">
-    <title>Coin Cubby — Secure Storage Made Easy</title>
+    <title>Coin Cubby â€” Secure Storage Made Easy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -130,7 +130,12 @@
                         </div>
                         <div class="input-group" id="pin-group">
                             <label>ENTER 6-DIGIT PASSWORD</label>
-                            <div class="digit-boxes" id="pin-boxes"></div>
+                            <div class="digit-boxes-wrapper">
+                                <div class="digit-boxes" id="pin-boxes"></div>
+                                <button class="toggle-password-btn" type="button" onclick="LoginScreen.togglePinVisibility()" aria-label="Show or hide password">
+                                    <span class="material-icons-round" id="pin-visibility-icon">visibility</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
@@ -182,7 +187,7 @@
                             </div>
                             <div class="account-info">
                                 <span class="account-label">Wallet Balance</span>
-                                <span id="account-balance" class="account-value account-value-green">₱325.00</span>
+                                <span id="account-balance" class="account-value account-value-green">â‚±325.00</span>
                             </div>
                         </div>
                         <hr class="divider">
@@ -305,7 +310,7 @@
                                 <span class="material-icons-round">info_outline</span>
                                 CURRENT RATE
                             </div>
-                            <div class="rate-amount">₱<span id="open-time-rate">10</span> <span class="rate-unit">per hour</span></div>
+                            <div class="rate-amount">â‚±<span id="open-time-rate">10</span> <span class="rate-unit">per hour</span></div>
                         </div>
                     </div>
                     <div class="login-buttons">
@@ -339,12 +344,12 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rental Fee</span>
-                            <span id="payment-rental-fee" class="summary-value">₱25</span>
+                            <span id="payment-rental-fee" class="summary-value">â‚±25</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Total Due</strong></span>
-                            <span id="payment-total" class="summary-value summary-value-green"><strong>₱30</strong></span>
+                            <span id="payment-total" class="summary-value summary-value-green"><strong>â‚±30</strong></span>
                         </div>
                     </div>
                     <h3 class="section-title">Choose Payment Method</h3>
@@ -379,17 +384,17 @@
                         </div>
                         <div class="wallet-row">
                             <span>Amount Due</span>
-                            <span id="wallet-amount-due" class="wallet-value">₱30.00</span>
+                            <span id="wallet-amount-due" class="wallet-value">â‚±30.00</span>
                         </div>
                         <hr class="divider">
                         <div class="wallet-row">
                             <span>Wallet Balance</span>
-                            <span id="wallet-balance" class="wallet-value">₱325.00</span>
+                            <span id="wallet-balance" class="wallet-value">â‚±325.00</span>
                         </div>
                         <hr class="divider">
                         <div class="wallet-row wallet-row-highlight">
                             <span>Remaining Balance</span>
-                            <span id="wallet-remaining" class="wallet-value wallet-value-green">₱295.00</span>
+                            <span id="wallet-remaining" class="wallet-value wallet-value-green">â‚±295.00</span>
                         </div>
                     </div>
                     <div class="login-buttons">
@@ -407,22 +412,22 @@
                     <div class="cash-summary">
                         <div class="cash-stat">
                             <span class="cash-stat-label">Amount Due</span>
-                            <span id="cash-amount-due" class="cash-stat-value">₱50.00</span>
+                            <span id="cash-amount-due" class="cash-stat-value">â‚±50.00</span>
                         </div>
                         <div class="cash-stat">
                             <span class="cash-stat-label">Inserted</span>
-                            <span id="cash-inserted" class="cash-stat-value cash-stat-orange">₱0.00</span>
+                            <span id="cash-inserted" class="cash-stat-value cash-stat-orange">â‚±0.00</span>
                         </div>
                         <div class="cash-stat">
                             <span class="cash-stat-label">Remaining</span>
-                            <span id="cash-remaining" class="cash-stat-value cash-stat-red">₱50.00</span>
+                            <span id="cash-remaining" class="cash-stat-value cash-stat-red">â‚±50.00</span>
                         </div>
                     </div>
                     <div class="cash-progress-bar">
                         <div id="cash-progress" class="cash-progress-fill" style="width: 0%"></div>
                     </div>
                     <p class="cash-hint">Insert coins or bills into the machine</p>
-                    <button id="btn-cash-continue" class="btn btn-primary hidden" onclick="CashPaymentScreen.continue()">
+                    <button id="btn-cash-continue" class="btn btn-primary btn-full hidden" onclick="CashPaymentScreen.continue()">
                         CONTINUE
                     </button>
                     <div class="cash-countdown-wrap">
@@ -460,7 +465,7 @@
                         </div>
                     </div>
                     <button class="btn btn-primary btn-full btn-open-compartment" id="btn-open-compartment" onclick="RentalConfirmedScreen.openCompartment()">
-                        <span class="material-icons-round">meeting_room</span> OPEN COMPARTMENT
+                        <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                     </button>
                 </div>
             </section>
@@ -477,7 +482,12 @@
                         </div>
                         <div class="input-group" id="retrieve-pin-group">
                             <label>ENTER 6-DIGIT PASSWORD</label>
-                            <div class="digit-boxes" id="retrieve-pin-boxes"></div>
+                            <div class="digit-boxes-wrapper">
+                                <div class="digit-boxes" id="retrieve-pin-boxes"></div>
+                                <button class="toggle-password-btn" type="button" onclick="RetrieveLoginScreen.togglePinVisibility()" aria-label="Show or hide password">
+                                    <span class="material-icons-round" id="retrieve-pin-visibility-icon">visibility</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.navigate('dashboard')">BACK</button>
@@ -537,7 +547,7 @@
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount Due</strong></span>
-                            <span id="retrieval-amount-due" class="summary-value summary-value-green"><strong>₱0.00</strong></span>
+                            <span id="retrieval-amount-due" class="summary-value summary-value-green"><strong>â‚±0.00</strong></span>
                         </div>
                     </div>
                     <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open" onclick="RetrievalPaymentScreen.openCompartment()">
@@ -557,8 +567,8 @@
                         <span class="material-icons-round icon-green">inventory_2</span>
                         <span>Compartment <strong id="retrieval-ready-code" class="text-green">A04</strong> is ready</span>
                     </div>
-                    <button class="btn btn-primary btn-full btn-open-compartment" onclick="RetrievalReadyScreen.openCompartment()">
-                        <span class="material-icons-round">meeting_room</span> OPEN COMPARTMENT
+                    <button id="btn-retrieval-complete-unlock" class="btn btn-primary btn-full btn-open-compartment" onclick="RetrievalReadyScreen.openCompartment()">
+                        <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                     </button>
                 </div>
             </section>
@@ -637,7 +647,7 @@
                 <div class="screen-body">
                     <div class="admin-warning-banner">
                         <span class="material-icons-round">admin_panel_settings</span>
-                        <span>Admin Unlock — If occupied, rental will be voided &amp; refunded to wallet</span>
+                        <span>Admin Unlock â€” If occupied, rental will be voided &amp; refunded to wallet</span>
                     </div>
                     <div class="card card-center admin-confirm-card">
                         <div class="summary-row summary-row-header">
@@ -649,26 +659,26 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Module</span>
-                            <span id="admin-confirm-module" class="summary-value">—</span>
+                            <span id="admin-confirm-module" class="summary-value">â€”</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rented By (User ID)</span>
-                            <span id="admin-confirm-user" class="summary-value">—</span>
+                            <span id="admin-confirm-user" class="summary-value">â€”</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rental Type</span>
-                            <span id="admin-confirm-type" class="summary-value">—</span>
+                            <span id="admin-confirm-type" class="summary-value">â€”</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Start Time</span>
-                            <span id="admin-confirm-start" class="summary-value">—</span>
+                            <span id="admin-confirm-start" class="summary-value">â€”</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount to Refund</strong></span>
-                            <span id="admin-confirm-refund" class="summary-value" style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
+                            <span id="admin-confirm-refund" class="summary-value" style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
                         </div>
-                        <p class="admin-refund-note">If occupied, this amount will be automatically credited to the user's wallet. Otherwise ₱0.00 — no active rental.</p>
+                        <p class="admin-refund-note">If occupied, this amount will be automatically credited to the user's wallet. Otherwise â‚±0.00 â€” no active rental.</p>
                     </div>
                     <div class="login-buttons">
                         <button class="btn btn-outline" onclick="App.showAdminLoading('Loading...'); setTimeout(() => { App.goBack(); App.hideAdminLoading(); }, 400)">BACK</button>
@@ -716,12 +726,12 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">User ID</span>
-                            <span id="admin-done-user" class="summary-value">—</span>
+                            <span id="admin-done-user" class="summary-value">â€”</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Refunded to Wallet</strong></span>
-                            <span id="admin-done-refund" class="summary-value" style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
+                            <span id="admin-done-refund" class="summary-value" style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
                         </div>
                     </div>
                     <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet automatically.</p>
@@ -743,7 +753,9 @@
         <!-- === GLOBAL LOADING OVERLAY === -->
         <div id="global-loading" class="global-loading-overlay" style="display:none">
             <div class="global-loading-box">
-                <div class="global-loading-spinner"></div>
+                <div class="cat-loader">
+                    <img src="/static/images/cat_loading.gif" />
+                </div>
                 <div id="global-loading-text" class="global-loading-text">Loading.</div>
             </div>
         </div>
@@ -761,7 +773,9 @@
         <!-- === ADMIN LOADING OVERLAY (inside #kiosk-app, centered below header) === -->
         <div id="admin-loading" class="admin-loading-overlay" style="display:none">
             <div class="admin-loading-box">
-                <div class="admin-loading-spinner"></div>
+                <div class="cat-loader">
+                    <img src="/static/images/cat_loading.gif" />
+                </div>
                 <div class="admin-loading-text">Loading.</div>
             </div>
         </div>

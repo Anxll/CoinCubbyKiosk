@@ -70,6 +70,9 @@ window.CashPaymentScreen = {
         } catch (e) {
             alert('Hardware Error: ' + e.message);
         }
+
+        // Make the header back button run the same cleanup as cancel
+        App.onBackOverride = () => this.cancel();
     },
 
     updateTimerDisplay() {
@@ -153,12 +156,12 @@ window.CashPaymentScreen = {
         const button = document.getElementById('btn-cash-continue');
         if (button) {
             button.disabled = true;
-            button.innerHTML = '<span class="material-icons-round">hourglass_empty</span> PROCESSING...';
         }
         await this.processSuccess();
     },
 
     async processSuccess() {
+        App.showLoading('Processing payment...');
         try {
             AppState.paymentMethod = 'cash';
             this.cleanup();
@@ -176,6 +179,7 @@ window.CashPaymentScreen = {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
                 AppState.cashWalletCredit = Number(res.wallet_credit || AppState.cashWalletCredit || 0);
+                // Keep loading active — rental-confirmed init() will hide it after printing receipt
                 App.navigate('rental-confirmed', { paymentMethod: 'cash' });
             } else {
                 const res = await Api.retrieveRental(
@@ -188,14 +192,15 @@ window.CashPaymentScreen = {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
                 AppState.cashWalletCredit = Number(res.wallet_credit || AppState.cashWalletCredit || 0);
+                // Keep loading active — retrieval-ready init() will hide it after printing receipt
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
+            App.hideLoading();
             alert(e.message);
             const button = document.getElementById('btn-cash-continue');
             if (button) {
                 button.disabled = false;
-                button.innerHTML = 'CONTINUE';
             }
         }
     },
@@ -219,5 +224,7 @@ window.CashPaymentScreen = {
             clearInterval(this._timerInterval);
             this._timerInterval = null;
         }
+        // Release the back button override so other screens behave normally
+        App.onBackOverride = null;
     }
 };

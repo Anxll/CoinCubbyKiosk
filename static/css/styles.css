@@ -53,6 +53,11 @@ body {
     flex-direction: column;
 }
 
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
 /* Typography Utilities */
 .text-green { color: var(--primary-green) !important; }
 .text-orange { color: var(--accent-orange) !important; }
@@ -301,6 +306,9 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     transition: transform 0.1s, opacity 0.2s;
     font-family: var(--font-family);
     min-width: 120px;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
 }
 
 .btn:active {
@@ -327,6 +335,10 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 .btn-full {
     width: 100%;
     max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
 }
 
 .btn-text {
@@ -552,6 +564,32 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     gap: 12px;
 }
 
+.digit-boxes-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: auto;
+}
+
+.toggle-password-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    min-width: 42px;
+    min-height: 42px;
+}
+
+.toggle-password-btn:hover {
+    color: var(--primary-green);
+}
+
 .digit-box {
     width: 56px;
     height: 64px;
@@ -744,7 +782,7 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 .legend-occupied { background-color: var(--status-occupied); }
 .legend-maintenance { background-color: var(--status-maintenance); }
 
-/* Center area — card centred both ways */
+/* Center area â€” card centred both ways */
 .comp-center-area {
     flex: 1;
     display: flex;
@@ -1408,7 +1446,7 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 }
 
 /* ============================================================
-   ADMIN LOGIN — PINK THEME
+   ADMIN LOGIN â€” PINK THEME
    All rules scoped to #screen-admin-login only.
    Nothing in the regular user flow is affected.
    ============================================================ */
@@ -1447,7 +1485,7 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     background-color: var(--admin-pink-dark) !important;
 }
 
-/* EXIT (outline) button — pink border + text */
+/* EXIT (outline) button â€” pink border + text */
 #screen-admin-login .btn-outline {
     color: var(--admin-pink) !important;
     border-color: var(--admin-pink-mid) !important;
@@ -1610,7 +1648,7 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 }
 
 
-/* Admin Compartments — all statuses clickable in admin flow */
+/* Admin Compartments â€” all statuses clickable in admin flow */
 .admin-selectable-available {
     cursor: pointer;
     pointer-events: auto !important;
@@ -1857,56 +1895,52 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
 /* Global Loading Dialog */
 .global-loading-overlay {
     position: absolute;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    height: calc(100% - var(--header-height));
+    background-color: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(4px);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 600;
+    z-index: 500;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.3s ease;
 }
 .global-loading-overlay.active {
     display: flex;
     opacity: 1;
     pointer-events: all;
 }
+#app-header.hidden ~ .global-loading-overlay {
+    top: 0;
+    height: 100%;
+}
 .global-loading-box {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
 }
-.global-loading-overlay.active .global-loading-box {
-    transform: translateY(0);
-}
-
-/* Classic White Spinner */
-.global-loading-spinner {
-    width: 64px;
-    height: 64px;
-    border: 6px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #ffffff;
-    border-radius: 50%;
-    animation: spin-circle 1s linear infinite;
-}
-@keyframes spin-circle {
-    0%   { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.cat-loader {
+    font-size: 64px;
+    display: inline-block;
+    transform: translateX(60px);
+    line-height: 1;
 }
 .global-loading-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 18px;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: 0.05em;
+    font-weight: 500;
+    color: #4a4a4a;
+    text-align: center;
+    letter-spacing: 0.02em;
 }
 
-/* Admin Loading Overlay — scoped inside #kiosk-app, below the header */
+
+/* Admin Loading Overlay â€” scoped inside #kiosk-app, below the header */
 .admin-loading-overlay {
     position: absolute;
     top: var(--header-height);
@@ -1934,30 +1968,7 @@ h1, h2, h3, h4 { font-weight: 700; color: var(--text-dark); }
     align-items: center;
     gap: 20px;
 }
-.admin-loading-spinner {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: conic-gradient(var(--admin-pink, #ff4a8d) 0%, rgba(255, 74, 141, 0.1) 70%, transparent 100%);
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
-    mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
-    animation: admin-spin 1s linear infinite;
-}
-.admin-loading-spinner::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 36px; /* (80px - 8px) / 2 */
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--admin-pink, #ff4a8d);
-}
-@keyframes admin-spin {
-    0%   { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+/* Admin loading spinner removed in favor of cat loader */
 .admin-loading-text {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 18px;

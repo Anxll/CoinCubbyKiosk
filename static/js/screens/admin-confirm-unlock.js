@@ -50,10 +50,12 @@ window.AdminConfirmUnlockScreen = {
     },
 
     proceed() {
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
         setTimeout(() => {
             App.navigate('admin-unlock-steps');
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
         }, 400);
     }
 };

@@ -22,6 +22,7 @@ class AppController {
     constructor() {
         this.history = [];
         this.currentScreen = 'dashboard';
+        this.onBackOverride = null; // screens can set this to intercept the back button
         
         // Timeout handling for kiosk
         this.INACTIVITY_LIMIT_MS = 15000; // 15s
@@ -69,7 +70,10 @@ class AppController {
         const overlay = document.getElementById('timeout-overlay');
         if (overlay) overlay.classList.add('hidden');
 
-        if (this.currentScreen !== 'dashboard' && this.currentScreen !== 'admin-login' && !this.currentScreen.startsWith('admin-')) {
+        // Exclude screens that manage their own timeouts or must not be interrupted
+        const noTimeoutScreens = ['dashboard', 'cash-payment', 'admin-login'];
+        const isAdminScreen = this.currentScreen.startsWith('admin-');
+        if (!noTimeoutScreens.includes(this.currentScreen) && !isAdminScreen) {
             this.inactivityTimeout = setTimeout(() => {
                 this.startCountdown();
             }, this.INACTIVITY_LIMIT_MS);
@@ -99,6 +103,25 @@ class AppController {
     }
 
     navigate(screenId, stateUpdates = {}, resetHistory = false) {
+        const overlay = document.getElementById('global-loading');
+        const isActive = overlay && overlay.classList.contains('active');
+        const isAdminTarget = screenId.startsWith('admin-');
+
+        // If loading is already active (e.g. from an API call), skip the artificial delay
+        if (isActive) {
+            this._doNavigate(screenId, stateUpdates, resetHistory);
+        } else {
+            const showFn = isAdminTarget ? this.showAdminLoading : this.showLoading;
+            const hideFn = isAdminTarget ? this.hideAdminLoading : this.hideLoading;
+            if (showFn) showFn.call(this, 'Loading...');
+            setTimeout(() => {
+                this._doNavigate(screenId, stateUpdates, resetHistory);
+                if (hideFn) hideFn.call(this);
+            }, 500);
+        }
+    }
+
+    _doNavigate(screenId, stateUpdates, resetHistory, isGoingBack = false) {
         // Apply state updates
         Object.assign(AppState, stateUpdates);
 
@@ -115,7 +138,8 @@ class AppController {
                 AppState.cashWalletCredit = 0;
                 AppState.selectedRental = null;
             }
-        } else if (this.currentScreen !== screenId) {
+        } else if (!isGoingBack && this.currentScreen !== screenId) {
+            // Only push to history when moving forward, not when going back
             this.history.push(this.currentScreen);
         }
 
@@ -152,10 +176,14 @@ class AppController {
     }
 
     goBack() {
+        // Allow screens to intercept back with custom logic (e.g. cash-payment cleanup)
+        if (typeof this.onBackOverride === 'function') {
+            this.onBackOverride();
+            return;
+        }
         if (this.history.length > 0) {
             const prevScreen = this.history.pop();
-            this.navigate(prevScreen, {}, false);
-            this.history.pop(); // prevent double adding to history
+            this._doNavigate(prevScreen, {}, false, true);
         } else {
             this.navigate('dashboard', {}, true);
         }
@@ -167,6 +195,8 @@ class AppController {
             const textEl = document.getElementById('global-loading-text');
             if (textEl) textEl.innerText = text;
             overlay.style.display = 'flex';
+            // Force reflow
+            overlay.offsetHeight;
             overlay.classList.add('active');
         }
     }
@@ -175,7 +205,11 @@ class AppController {
         const overlay = document.getElementById('global-loading');
         if (overlay) {
             overlay.classList.remove('active');
-            overlay.style.display = 'none';
+            setTimeout(() => {
+                if (!overlay.classList.contains('active')) {
+                    overlay.style.display = 'none';
+                }
+            }, 300);
         }
     }
 
@@ -226,3 +260,5 @@ class AppController {
     }
 }
 window.App = new AppController();
+if (!App.showAdminLoading) App.showAdminLoading = App.showLoading.bind(App);
+if (!App.hideAdminLoading) App.hideAdminLoading = App.hideLoading.bind(App);

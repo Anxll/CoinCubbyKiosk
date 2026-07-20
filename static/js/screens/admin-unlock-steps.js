@@ -86,7 +86,9 @@ window.AdminUnlockStepsScreen = {
         btn.disabled = true;
         btn.innerHTML = 'CONFIRMING...';
 
-        App.showAdminLoading('Emergency unlocking...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Emergency unlocking...');
 
         try {
             // Call API to emergency-unlock and void/refund if occupied
@@ -103,7 +105,7 @@ window.AdminUnlockStepsScreen = {
             console.error('Emergency unlock error:', e);
             if (errEl) errEl.innerText = 'Failed to execute unlock: ' + (e.message || e);
         } finally {
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
         }

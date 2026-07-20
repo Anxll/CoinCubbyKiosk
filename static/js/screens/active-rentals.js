@@ -4,21 +4,26 @@ window.ActiveRentalsScreen = {
     async init() {
         if (!AppState.user) return App.navigate('dashboard');
         
+        App.showLoading('Loading active rentals...');
         try {
             const res = await Api.getActiveRentals(AppState.user.id);
             this.rentals = res.rentals;
             this.renderList();
         } catch (e) {
             console.error(e);
+        } finally {
+            App.hideLoading();
         }
     },
 
     renderList() {
         const list = document.getElementById('active-rentals-list');
+        const footer = document.querySelector('#screen-active-rentals .compartment-footer');
         
         if (this.rentals.length === 0) {
+            if (footer) footer.style.display = 'none';
             list.innerHTML = `
-                <div class="card card-center">
+                <div class="card card-center" style="margin: 40px auto 0;">
                     <div class="icon-circle icon-circle-orange-light">
                         <span class="material-icons-round">sentiment_dissatisfied</span>
                     </div>
@@ -30,6 +35,7 @@ window.ActiveRentalsScreen = {
             return;
         }
 
+        if (footer) footer.style.display = 'flex';
         let html = '';
         this.rentals.forEach(r => {
             const isReady = r.status === 'ready_for_retrieval';
@@ -75,10 +81,13 @@ window.ActiveRentalsScreen = {
     },
 
     async processRetrieval(rental) {
+        App.showLoading('Processing retrieval...');
         try {
             const res = await Api.retrieveRental(rental.id, null, AppState.user.id);
+            // Keep loading active — retrieval-ready init() will hide it after printing receipt
             App.navigate('retrieval-ready', { compartmentCode: res.compartment_code, amountCharged: 0 });
         } catch (e) {
+            App.hideLoading();
             alert(e.message);
         }
     }

@@ -13,7 +13,9 @@ window.AdminSelectCompartmentScreen = {
     },
 
     async loadCompartments() {
-        App.showAdminLoading('Loading compartments...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading compartments...');
 
         try {
             const moduleName = this.modules[this.currentModuleIdx];
@@ -30,7 +32,8 @@ window.AdminSelectCompartmentScreen = {
         } catch (e) {
             console.error('Admin compartment load error:', e);
         } finally {
-            App.hideAdminLoading();
+            const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+            if (hideLoading) hideLoading.call(App);
         }
     },
 
@@ -125,10 +128,12 @@ window.AdminSelectCompartmentScreen = {
 
     confirm() {
         if (!this.selectedCompartment) return;
-        App.showAdminLoading('Loading...');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
         setTimeout(() => {
             App.navigate('admin-confirm-unlock', { adminSelectedCompartment: this.selectedCompartment });
-            App.hideAdminLoading();
+            if (hideLoading) hideLoading.call(App);
         }, 400);
     }
 };
