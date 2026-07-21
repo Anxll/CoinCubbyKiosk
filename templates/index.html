@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, height=600, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
+    <meta name="description"
+        content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
     <meta name="kiosk-api-token" content="{{ kiosk_api_token }}">
     <title>Coin Cubby â€” Secure Storage Made Easy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +14,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/styles.css?v=9">
 </head>
+
 <body>
     <div id="kiosk-app">
         <!-- === HEADER (injected dynamically) === -->
@@ -59,11 +62,13 @@
                         <p class="dashboard-subtitle">Secure Storage Made Easy</p>
                     </div>
                     <div class="dashboard-actions">
-                        <button id="btn-rent" class="btn-action btn-rent" onclick="App.navigate('login', {flow: 'rent'})">
+                        <button id="btn-rent" class="btn-action btn-rent"
+                            onclick="App.navigate('login', {flow: 'rent'})">
                             <span class="material-icons-round">inventory_2</span>
                             <span>RENT</span>
                         </button>
-                        <button id="btn-retrieve" class="btn-action btn-retrieve" onclick="App.navigate('retrieve-login', {flow: 'retrieve'})">
+                        <button id="btn-retrieve" class="btn-action btn-retrieve"
+                            onclick="App.navigate('retrieve-login', {flow: 'retrieve'})">
                             <span class="material-icons-round">lock_open</span>
                             <span>RETRIEVE</span>
                         </button>
@@ -86,7 +91,8 @@
                         </div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.navigate('dashboard')">EXIT</button>
-                            <button id="btn-admin-continue" class="btn btn-primary" onclick="AdminLoginScreen.submit()">CONTINUE</button>
+                            <button id="btn-admin-continue" class="btn btn-primary"
+                                onclick="AdminLoginScreen.submit()">CONTINUE</button>
                         </div>
                     </div>
                     <!-- On-screen numpad -->
@@ -107,12 +113,16 @@
                             <div class="digit-boxes" id="admin-otp-boxes" data-length="6"></div>
                         </div>
                         <div style="margin-top: 16px; text-align: center;">
-                            <span id="admin-otp-timer-text" style="color: var(--text-muted); font-size: 14px;">Resend code in <strong id="admin-otp-timer">60</strong>s</span>
-                            <button id="btn-admin-resend-otp" class="btn btn-text" style="display: none; margin: 0 auto; padding: 4px 12px; color: var(--admin-pink); font-weight: 700; background: transparent;" onclick="AdminVerifyOtpScreen.resendOtp()">RESEND CODE</button>
+                            <span id="admin-otp-timer-text" style="color: var(--text-muted); font-size: 14px;">Resend
+                                code in <strong id="admin-otp-timer">60</strong>s</span>
+                            <button id="btn-admin-resend-otp" class="btn btn-text"
+                                style="display: none; margin: 0 auto; padding: 4px 12px; color: var(--admin-pink); font-weight: 700; background: transparent;"
+                                onclick="AdminVerifyOtpScreen.resendOtp()">RESEND CODE</button>
                         </div>
                         <div class="login-buttons" style="margin-top: 40px;">
                             <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
-                            <button id="btn-admin-verify-otp" class="btn admin-btn-pink" onclick="AdminVerifyOtpScreen.submit()">VERIFY</button>
+                            <button id="btn-admin-verify-otp" class="btn admin-btn-pink"
+                                onclick="AdminVerifyOtpScreen.submit()">VERIFY</button>
                         </div>
                     </div>
                     <!-- On-screen numpad -->
@@ -132,14 +142,16 @@
                             <label>ENTER 6-DIGIT PASSWORD</label>
                             <div class="digit-boxes-wrapper">
                                 <div class="digit-boxes" id="pin-boxes"></div>
-                                <button class="toggle-password-btn" type="button" onclick="LoginScreen.togglePinVisibility()" aria-label="Show or hide password">
+                                <button class="toggle-password-btn" type="button"
+                                    onclick="LoginScreen.togglePinVisibility()" aria-label="Show or hide password">
                                     <span class="material-icons-round" id="pin-visibility-icon">visibility</span>
                                 </button>
                             </div>
                         </div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
-                            <button id="btn-login-continue" class="btn btn-primary" onclick="LoginScreen.submit()">CONTINUE</button>
+                            <button id="btn-login-continue" class="btn btn-primary"
+                                onclick="LoginScreen.submit()">CONTINUE</button>
                         </div>
                         <div class="login-register">
                             <p>Don't have an account yet?</p>
@@ -207,7 +219,8 @@
                     </div>
                     <div class="login-buttons">
                         <button class="btn btn-outline" onclick="App.navigate('dashboard')">RETURN HOME</button>
-                        <button class="btn btn-primary" id="btn-select-cubby" onclick="App.navigate('select-compartment')">SELECT CUBBY</button>
+                        <button class="btn btn-primary" id="btn-select-cubby"
+                            onclick="App.navigate('select-compartment')">SELECT CUBBY</button>
                     </div>
                 </div>
             </section>
@@ -249,7 +262,8 @@
                                 NEXT <span class="material-icons-round">chevron_right</span>
                             </button>
                         </div>
-                        <button id="btn-confirm-compartment" class="btn btn-primary btn-confirm-selection" onclick="CompartmentScreen.confirm()" disabled>CONFIRM SELECTION</button>
+                        <button id="btn-confirm-compartment" class="btn btn-primary btn-confirm-selection"
+                            onclick="CompartmentScreen.confirm()" disabled>CONFIRM SELECTION</button>
                     </div>
                 </div>
             </section>
@@ -258,7 +272,8 @@
             <section id="screen-rental-type" class="screen">
                 <div class="screen-body">
                     <div class="rental-type-badge" id="rental-type-compartment">Compartment: A01</div>
-                    <button class="card card-option card-option-green" id="btn-fixed-duration" onclick="App.navigate('fixed-duration')">
+                    <button class="card card-option card-option-green" id="btn-fixed-duration"
+                        onclick="App.navigate('fixed-duration')">
                         <div class="icon-circle icon-circle-green-light">
                             <span class="material-icons-round">schedule</span>
                         </div>
@@ -267,7 +282,8 @@
                             <span>Select a specific rental period</span>
                         </div>
                     </button>
-                    <button class="card card-option card-option-orange" id="btn-open-time" onclick="App.navigate('open-time')">
+                    <button class="card card-option card-option-orange" id="btn-open-time"
+                        onclick="App.navigate('open-time')">
                         <div class="icon-circle icon-circle-orange">
                             <span class="material-icons-round">timer</span>
                         </div>
@@ -290,7 +306,8 @@
                     <div id="duration-grid" class="duration-grid"></div>
                     <div class="duration-footer">
                         <button class="btn btn-outline" onclick="App.goBack()">BACK</button>
-                        <button id="btn-confirm-duration" class="btn btn-primary" onclick="FixedDurationScreen.confirm()" disabled>CONFIRM</button>
+                        <button id="btn-confirm-duration" class="btn btn-primary"
+                            onclick="FixedDurationScreen.confirm()" disabled>CONFIRM</button>
                     </div>
                 </div>
             </section>
@@ -304,13 +321,15 @@
                         </div>
                         <h2 class="card-title">Open Time Rental</h2>
                         <div id="open-time-compartment" class="compartment-badge-inline">Compartment: A01</div>
-                        <p class="card-description">Charges are based on actual storage duration. Payment will be calculated upon retrieval.</p>
+                        <p class="card-description">Charges are based on actual storage duration. Payment will be
+                            calculated upon retrieval.</p>
                         <div class="rate-box">
                             <div class="rate-label">
                                 <span class="material-icons-round">info_outline</span>
                                 CURRENT RATE
                             </div>
-                            <div class="rate-amount">â‚±<span id="open-time-rate">10</span> <span class="rate-unit">per hour</span></div>
+                            <div class="rate-amount">â‚±<span id="open-time-rate">10</span> <span class="rate-unit">per
+                                    hour</span></div>
                         </div>
                     </div>
                     <div class="login-buttons">
@@ -349,7 +368,8 @@
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Total Due</strong></span>
-                            <span id="payment-total" class="summary-value summary-value-green"><strong>â‚±30</strong></span>
+                            <span id="payment-total"
+                                class="summary-value summary-value-green"><strong>â‚±30</strong></span>
                         </div>
                     </div>
                     <h3 class="section-title">Choose Payment Method</h3>
@@ -412,31 +432,87 @@
                     <div class="cash-summary">
                         <div class="cash-stat">
                             <span class="cash-stat-label">Amount Due</span>
-                            <span id="cash-amount-due" class="cash-stat-value">â‚±50.00</span>
+                            <span id="cash-amount-due" class="cash-stat-value">₱50.00</span>
                         </div>
                         <div class="cash-stat">
                             <span class="cash-stat-label">Inserted</span>
-                            <span id="cash-inserted" class="cash-stat-value cash-stat-orange">â‚±0.00</span>
+                            <span id="cash-inserted" class="cash-stat-value cash-stat-orange">₱0.00</span>
                         </div>
                         <div class="cash-stat">
                             <span class="cash-stat-label">Remaining</span>
-                            <span id="cash-remaining" class="cash-stat-value cash-stat-red">â‚±50.00</span>
+                            <span id="cash-remaining" class="cash-stat-value cash-stat-red">₱50.00</span>
                         </div>
                     </div>
                     <div class="cash-progress-bar">
                         <div id="cash-progress" class="cash-progress-fill" style="width: 0%"></div>
                     </div>
                     <p class="cash-hint">Insert coins or bills into the machine</p>
-                    <button id="btn-cash-continue" class="btn btn-primary btn-full hidden" onclick="CashPaymentScreen.continue()">
-                        CONTINUE
-                    </button>
-                    <div class="cash-countdown-wrap">
-                        <span class="material-icons-round cash-countdown-icon">hourglass_top</span>
-                        <p class="cash-countdown-label">Time Remaining</p>
-                        <div id="cash-countdown" class="cash-countdown">1:00</div>
-                        <p class="cash-countdown-sub">Insert coins or bills before time runs out</p>
+
+                    <div class="cash-middle-card">
+                        <!-- 1. Countdown Timer (default state) -->
+                        <div id="cash-countdown-wrap" class="cash-countdown-content">
+                            <span class="material-icons-round cash-countdown-icon">hourglass_top</span>
+                            <p class="cash-countdown-label">Time Remaining</p>
+                            <div id="cash-countdown" class="cash-countdown">1:00</div>
+                            <p class="cash-countdown-sub">Insert coins or bills before time runs out</p>
+                        </div>
+
+                        <!-- 2. Exact payment Continue Button -->
+                        <div id="cash-continue-wrap" class="cash-continue-content hidden">
+                            <div class="success-indicator">
+                                <span class="material-icons-round text-green"
+                                    style="font-size: 56px; color: var(--primary-green); margin-bottom: 8px;">check_circle</span>
+                                <h3 style="margin-bottom: 4px;">Payment Complete</h3>
+                                <p style="margin-bottom: 16px; color: var(--text-muted);">Press continue to confirm your
+                                    rental</p>
+                            </div>
+                            <button id="btn-cash-continue" class="btn btn-primary btn-full"
+                                onclick="CashPaymentScreen.continue()">
+                                CONTINUE
+                            </button>
+                        </div>
+
+                        <!-- 3. Overpayment Choice Panel -->
+                        <div id="change-choice-wrap" class="change-choice-content hidden">
+                            <div class="success-indicator">
+                                <span class="material-icons-round text-orange"
+                                    style="font-size: 56px; color: var(--accent-orange); margin-bottom: 8px;">monetization_on</span>
+                                <h3 style="margin-bottom: 4px;">Select Change Option</h3>
+                                <p style="margin-bottom: 16px; color: var(--text-muted);">You have an overpayment of
+                                    <strong id="change-amount-label" class="text-orange">₱0.00</strong>
+                                </p>
+                            </div>
+                            <div class="change-options-row">
+                                <button id="btn-change-coins" class="btn-change-option"
+                                    onclick="CashPaymentScreen.chooseCoins()">
+                                    <span class="material-icons-round">savings</span>
+                                    <div class="btn-change-text">
+                                        <strong>Get Coins</strong>
+                                        <span>Dispense ₱5 coins</span>
+                                    </div>
+                                </button>
+                                <button id="btn-change-wallet" class="btn-change-option"
+                                    onclick="CashPaymentScreen.chooseWallet()">
+                                    <span class="material-icons-round">account_balance_wallet</span>
+                                    <div class="btn-change-text">
+                                        <strong>Add to Wallet</strong>
+                                        <span>Credit to account</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. Processing / Loading state -->
+                        <div id="cash-processing-wrap" class="cash-processing-content hidden">
+                            <span class="material-icons-round cash-spinner"
+                                style="font-size: 56px; color: var(--accent-orange); margin-bottom: 12px;">hourglass_empty</span>
+                            <h3 id="cash-processing-title" style="margin-bottom: 4px;">Processing...</h3>
+                            <p id="cash-processing-subtitle" style="color: var(--text-muted);">Please wait.</p>
+                        </div>
                     </div>
-                    <button class="btn btn-outline btn-full" onclick="CashPaymentScreen.cancel()">CANCEL</button>
+
+                    <button id="btn-cash-cancel" class="btn btn-outline btn-full btn-cancel"
+                        onclick="CashPaymentScreen.cancel()">CANCEL</button>
                 </div>
             </section>
 
@@ -464,7 +540,8 @@
                             <span id="confirmed-retrieval-time" class="summary-value">Jul 05, 2026 01:27 AM</span>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-open-compartment" onclick="RentalConfirmedScreen.openCompartment()">
+                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-open-compartment"
+                        onclick="RentalConfirmedScreen.openCompartment()">
                         <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                     </button>
                 </div>
@@ -484,14 +561,18 @@
                             <label>ENTER 6-DIGIT PASSWORD</label>
                             <div class="digit-boxes-wrapper">
                                 <div class="digit-boxes" id="retrieve-pin-boxes"></div>
-                                <button class="toggle-password-btn" type="button" onclick="RetrieveLoginScreen.togglePinVisibility()" aria-label="Show or hide password">
-                                    <span class="material-icons-round" id="retrieve-pin-visibility-icon">visibility</span>
+                                <button class="toggle-password-btn" type="button"
+                                    onclick="RetrieveLoginScreen.togglePinVisibility()"
+                                    aria-label="Show or hide password">
+                                    <span class="material-icons-round"
+                                        id="retrieve-pin-visibility-icon">visibility</span>
                                 </button>
                             </div>
                         </div>
                         <div class="login-buttons">
                             <button class="btn btn-outline" onclick="App.navigate('dashboard')">BACK</button>
-                            <button id="btn-retrieve-login" class="btn btn-primary" onclick="RetrieveLoginScreen.submit()">CONTINUE</button>
+                            <button id="btn-retrieve-login" class="btn btn-primary"
+                                onclick="RetrieveLoginScreen.submit()">CONTINUE</button>
                         </div>
                         <div class="login-register">
                             <p>Don't have an account yet?</p>
@@ -547,10 +628,12 @@
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount Due</strong></span>
-                            <span id="retrieval-amount-due" class="summary-value summary-value-green"><strong>â‚±0.00</strong></span>
+                            <span id="retrieval-amount-due"
+                                class="summary-value summary-value-green"><strong>â‚±0.00</strong></span>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open" onclick="RetrievalPaymentScreen.openCompartment()">
+                    <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open"
+                        onclick="RetrievalPaymentScreen.openCompartment()">
                         <span class="material-icons-round">payment</span> CHOOSE PAYMENT METHOD
                     </button>
                 </div>
@@ -565,9 +648,11 @@
                     <h2 class="success-title">Payment Confirmed</h2>
                     <div class="retrieval-ready-info">
                         <span class="material-icons-round icon-green">inventory_2</span>
-                        <span>Compartment <strong id="retrieval-ready-code" class="text-green">A04</strong> is ready</span>
+                        <span>Compartment <strong id="retrieval-ready-code" class="text-green">A04</strong> is
+                            ready</span>
                     </div>
-                    <button id="btn-retrieval-complete-unlock" class="btn btn-primary btn-full btn-open-compartment" onclick="RetrievalReadyScreen.openCompartment()">
+                    <button id="btn-retrieval-complete-unlock" class="btn btn-primary btn-full btn-open-compartment"
+                        onclick="RetrievalReadyScreen.openCompartment()">
                         <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                     </button>
                 </div>
@@ -611,7 +696,8 @@
                         <span class="legend-item"><span class="legend-dot legend-available"></span> Available</span>
                         <span class="legend-item"><span class="legend-dot legend-occupied"></span> Occupied</span>
                         <span class="legend-item"><span class="legend-dot legend-maintenance"></span> Maintenance</span>
-                        <span class="admin-legend-badge"><span class="material-icons-round" style="font-size:14px">admin_panel_settings</span> Select ANY locker to unlock</span>
+                        <span class="admin-legend-badge"><span class="material-icons-round"
+                                style="font-size:14px">admin_panel_settings</span> Select ANY locker to unlock</span>
                     </div>
                     <div class="comp-center-area">
                         <div class="comp-card-wrapper">
@@ -627,16 +713,20 @@
                     </div>
                     <div class="comp-bottom-bar">
                         <div class="compartment-footer">
-                            <button id="btn-admin-prev-module" class="btn btn-text" onclick="AdminSelectCompartmentScreen.prevModule()">
+                            <button id="btn-admin-prev-module" class="btn btn-text"
+                                onclick="AdminSelectCompartmentScreen.prevModule()">
                                 <span class="material-icons-round">chevron_left</span> PREV
                             </button>
                             <span id="admin-module-page" class="module-page admin-page-indicator">1 / 2</span>
-                            <button id="btn-admin-next-module" class="btn btn-text" onclick="AdminSelectCompartmentScreen.nextModule()">
+                            <button id="btn-admin-next-module" class="btn btn-text"
+                                onclick="AdminSelectCompartmentScreen.nextModule()">
                                 NEXT <span class="material-icons-round">chevron_right</span>
                             </button>
                         </div>
                         <div style="display:flex; justify-content:center; padding: 0 24px;">
-                            <button id="btn-admin-confirm-compartment" class="btn btn-confirm-selection admin-btn-pink" onclick="AdminSelectCompartmentScreen.confirm()" disabled style="width:100%; max-width:440px;">UNLOCK THIS LOCKER</button>
+                            <button id="btn-admin-confirm-compartment" class="btn btn-confirm-selection admin-btn-pink"
+                                onclick="AdminSelectCompartmentScreen.confirm()" disabled
+                                style="width:100%; max-width:440px;">UNLOCK THIS LOCKER</button>
                         </div>
                     </div>
                 </div>
@@ -676,13 +766,17 @@
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount to Refund</strong></span>
-                            <span id="admin-confirm-refund" class="summary-value" style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
+                            <span id="admin-confirm-refund" class="summary-value"
+                                style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
                         </div>
-                        <p class="admin-refund-note">If occupied, this amount will be automatically credited to the user's wallet. Otherwise â‚±0.00 â€” no active rental.</p>
+                        <p class="admin-refund-note">If occupied, this amount will be automatically credited to the
+                            user's wallet. Otherwise â‚±0.00 â€” no active rental.</p>
                     </div>
                     <div class="login-buttons">
-                        <button class="btn btn-outline" onclick="App.showAdminLoading('Loading...'); setTimeout(() => { App.goBack(); App.hideAdminLoading(); }, 400)">BACK</button>
-                        <button id="btn-admin-proceed-unlock" class="btn admin-btn-pink" onclick="AdminConfirmUnlockScreen.proceed()">PROCEED TO UNLOCK</button>
+                        <button class="btn btn-outline"
+                            onclick="App.showAdminLoading('Loading...'); setTimeout(() => { App.goBack(); App.hideAdminLoading(); }, 400)">BACK</button>
+                        <button id="btn-admin-proceed-unlock" class="btn admin-btn-pink"
+                            onclick="AdminConfirmUnlockScreen.proceed()">PROCEED TO UNLOCK</button>
                     </div>
                 </div>
             </section>
@@ -698,14 +792,19 @@
                                 Compartment A04
                             </span>
                             <h2 class="admin-steps-title">Admin Unlock</h2>
-                            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Follow the steps below, then confirm to release the lock.</p>
+                            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Follow the steps below,
+                                then confirm to release the lock.</p>
                         </div>
                         <div class="admin-steps-list" id="admin-steps-list"></div>
                     </div>
                     <!-- Pinned bottom button -->
                     <div class="admin-steps-footer">
-                        <p id="admin-steps-error" style="color: var(--admin-pink); font-size: 13px; text-align: center; margin: 0 0 8px; min-height: 18px;"></p>
-                        <button id="btn-admin-complete-unlock" class="btn admin-btn-pink btn-full" style="padding: 14px 40px; font-size: 16px;" onclick="AdminUnlockStepsScreen.completeUnlock()">
+                        <p id="admin-steps-error"
+                            style="color: var(--admin-pink); font-size: 13px; text-align: center; margin: 0 0 8px; min-height: 18px;">
+                        </p>
+                        <button id="btn-admin-complete-unlock" class="btn admin-btn-pink btn-full"
+                            style="padding: 14px 40px; font-size: 16px;"
+                            onclick="AdminUnlockStepsScreen.completeUnlock()">
                             <span class="material-icons-round">lock_open</span> CONFIRM &amp; OPEN LOCKER
                         </button>
                     </div>
@@ -731,10 +830,12 @@
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Refunded to Wallet</strong></span>
-                            <span id="admin-done-refund" class="summary-value" style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
+                            <span id="admin-done-refund" class="summary-value"
+                                style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
                         </div>
                     </div>
-                    <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet automatically.</p>
+                    <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet
+                        automatically.</p>
                     <button class="btn admin-btn-pink btn-full" onclick="AdminUnlockDoneScreen.backToPanel()">
                         <span class="material-icons-round">home</span> BACK TO ADMIN PANEL
                     </button>
@@ -767,6 +868,48 @@
                 <h3 id="global-dialog-title" class="global-dialog-title">Alert</h3>
                 <p id="global-dialog-message" class="global-dialog-message">Something went wrong.</p>
                 <button class="btn btn-primary global-dialog-btn" onclick="App.hideDialog()">OK</button>
+            </div>
+        </div>
+
+        <!-- === POST-RENTAL CHOICE DIALOG === -->
+        <div id="post-rental-dialog" class="global-dialog-overlay" style="display:none">
+            <div class="global-dialog-box">
+                <span class="material-icons-round global-dialog-icon"
+                    style="color: var(--primary-green);">check_circle</span>
+                <h3 class="global-dialog-title">Rental Complete!</h3>
+                <p class="global-dialog-message">Your locker has been opened successfully. What would you like to do
+                    next?</p>
+                <div class="post-rental-dialog-actions">
+                    <button class="btn btn-outline post-rental-dialog-btn"
+                        onclick="App.hidePostRentalDialog(); App.navigate('dashboard', {}, true);">
+                        <span class="material-icons-round">logout</span> EXIT ACCOUNT
+                    </button>
+                    <button class="btn btn-primary post-rental-dialog-btn"
+                        onclick="App.hidePostRentalDialog(); App.navigate('account');">
+                        <span class="material-icons-round">account_circle</span> ACCOUNT OVERVIEW
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === POST-RETRIEVAL CHOICE DIALOG === -->
+        <div id="post-retrieval-dialog" class="global-dialog-overlay" style="display:none">
+            <div class="global-dialog-box">
+                <span class="material-icons-round global-dialog-icon"
+                    style="color: var(--primary-green);">check_circle</span>
+                <h3 class="global-dialog-title">Retrieval Complete!</h3>
+                <p class="global-dialog-message">Your items have been retrieved successfully. What would you like to do
+                    next?</p>
+                <div class="post-rental-dialog-actions">
+                    <button class="btn btn-outline post-rental-dialog-btn"
+                        onclick="App.hidePostRetrievalDialog(); App.navigate('dashboard', {}, true);">
+                        <span class="material-icons-round">logout</span> EXIT ACCOUNT
+                    </button>
+                    <button class="btn btn-primary post-rental-dialog-btn"
+                        onclick="App.hidePostRetrievalDialog(); App.navigate('account');">
+                        <span class="material-icons-round">account_circle</span> ACCOUNT OVERVIEW
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -812,4 +955,5 @@
     <script src="/static/js/screens/admin-unlock-done.js?v=3"></script>
     <script src="/static/js/app.js?v=7"></script>
 </body>
+
 </html>

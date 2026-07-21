@@ -7,7 +7,7 @@ window.RentalConfirmedScreen = {
         }
 
         document.getElementById('confirmed-compartment').innerText = AppState.selectedCompartment.code;
-        
+
         if (AppState.rentalType === 'fixed') {
             document.getElementById('confirmed-rental-type').innerText = 'Fixed Duration';
             const expires = new Date(Date.now() + AppState.durationHours * 3600 * 1000);
@@ -52,16 +52,16 @@ window.RentalConfirmedScreen = {
         btn.disabled = true;
         btn.innerHTML = 'CONFIRMING...';
         App.showLoading('Unlocking locker...');
-        
+
         try {
             await Api.request(`/hardware/unlock/${AppState.selectedCompartment.code}`, {
                 method: 'POST',
                 body: JSON.stringify({ device_code: AppState.selectedCompartment.device_code })
             });
-            App.showLoading('Locker unlocked! Returning home...');
+            App.showLoading('Locker unlocked!');
             setTimeout(() => {
-                App.navigate('dashboard', {}, true);
                 App.hideLoading();
+                App.showPostRentalDialog();
             }, 1200);
         } catch (e) {
             App.hideLoading();

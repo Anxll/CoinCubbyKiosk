@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 # LOW  = enabled (bills accepted)  — only during cash payment screen.
 BILL_INHIBIT_PIN = 22
 
+# GPIO pin for the change dispenser servo.
+CHANGE_DISPENSER_PIN = 23
+
 class HardwareManager:
     """Unified interface for all kiosk hardware peripherals using gpiozero."""
 
@@ -23,6 +26,7 @@ class HardwareManager:
         self._inserted_amount = 0
         self._cash_accepting = False
         self.bill_inhibit = None
+        self.change_dispenser = None
 
         # Detect if running on Raspberry Pi and initialize gpiozero
         if not self.simulation_mode:
@@ -44,6 +48,10 @@ class HardwareManager:
         from .canbus import CanBusController
         self.can_bus = CanBusController(simulation_mode=self.simulation_mode)
 
+        # Initialize change dispenser (GPIO 23 servo) — works in both real and sim mode
+        from .change_dispenser import ChangeDispenser
+        self.change_dispenser = ChangeDispenser(simulation_mode=self.simulation_mode)
+
     # === Compartment mapping ===
     # Maps compartment codes to their CAN bus index/identifier
     COMPARTMENT_PIN_MAP = {
@@ -63,6 +71,18 @@ class HardwareManager:
             device_code: 16-char module ID from the Supabase modules table.
         """
         self.can_bus.unlock_compartment(compartment_code, device_code)
+
+    def dispense_change(self, amount: float, on_complete=None):
+        """Dispense change via the servo-driven coin dispenser (GPIO 23).
+
+        Runs asynchronously — this method returns immediately.
+
+        Args:
+            amount: Change amount in pesos. Each ₱5 = one servo pulse.
+            on_complete: Optional callback(coins_dispensed) when done.
+        """
+        self.change_dispenser.dispense_async(amount, on_complete=on_complete)
+        logger.info(f"Change dispenser triggered: ₱{amount:.2f}")
 
     def get_door_status(self, compartment_code: str) -> bool:
         """Check if a compartment door is open. Returns True if open."""

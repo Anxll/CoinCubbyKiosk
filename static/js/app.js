@@ -23,7 +23,7 @@ class AppController {
         this.history = [];
         this.currentScreen = 'dashboard';
         this.onBackOverride = null; // screens can set this to intercept the back button
-        
+
         // Timeout handling for kiosk
         this.INACTIVITY_LIMIT_MS = 15000; // 15s
         this.COUNTDOWN_START = 15;
@@ -39,8 +39,8 @@ class AppController {
         document.addEventListener('click', () => this.resetTimeout());
         document.addEventListener('touchstart', () => this.resetTimeout());
         document.addEventListener('keydown', () => this.resetTimeout());
-        this.navigate('dashboard', {flow: 'rent'}, true);
-        
+        this.navigate('dashboard', { flow: 'rent' }, true);
+
         // Setup listener for admin loading triggers
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-admin-loading]');
@@ -64,7 +64,7 @@ class AppController {
     resetTimeout() {
         if (this.inactivityTimeout) clearTimeout(this.inactivityTimeout);
         if (this.countdownInterval) clearInterval(this.countdownInterval);
-        
+
         // Hide overlay if it was showing
         this.isCountingDown = false;
         const overlay = document.getElementById('timeout-overlay');
@@ -85,11 +85,11 @@ class AppController {
         this.countdownValue = this.COUNTDOWN_START;
         const overlay = document.getElementById('timeout-overlay');
         const counterEl = document.getElementById('timeout-counter');
-        
+
         if (overlay && counterEl) {
             counterEl.innerText = this.countdownValue;
             overlay.classList.remove('hidden');
-            
+
             this.countdownInterval = setInterval(() => {
                 this.countdownValue--;
                 if (this.countdownValue > 0) {
@@ -145,7 +145,7 @@ class AppController {
 
         // Hide old screen
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        
+
         // Show new screen
         const screenEl = document.getElementById(`screen-${screenId}`);
         if (screenEl) {
@@ -171,7 +171,7 @@ class AppController {
 
         Header.update(this.currentScreen);
         Stepper.update(this.currentScreen, AppState.flow);
-        
+
         this.resetTimeout();
     }
 
@@ -253,6 +253,42 @@ class AppController {
 
     hideDialog() {
         const overlay = document.getElementById('global-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        }
+    }
+
+    showPostRentalDialog() {
+        const overlay = document.getElementById('post-rental-dialog');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            // Force reflow so the transition runs
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    hidePostRentalDialog() {
+        const overlay = document.getElementById('post-rental-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        }
+    }
+
+    showPostRetrievalDialog() {
+        const overlay = document.getElementById('post-retrieval-dialog');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            // Force reflow so the transition runs
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    hidePostRetrievalDialog() {
+        const overlay = document.getElementById('post-retrieval-dialog');
         if (overlay) {
             overlay.classList.remove('active');
             overlay.style.display = 'none';

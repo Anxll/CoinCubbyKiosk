@@ -122,3 +122,34 @@ def cash_status_stream():
                         'Connection': 'keep-alive',
                         'X-Accel-Buffering': 'no'
                     })
+
+
+@hardware_bp.route('/change/dispense', methods=['POST'])
+@require_kiosk_token
+def dispense_change():
+    """Trigger the change dispenser to dispense a specific amount in ₱5 coins.
+
+    Expects JSON body: { "amount": 15.0 }
+    The dispenser runs asynchronously — this endpoint returns immediately.
+    """
+    data = request.get_json() or {}
+    try:
+        amount = float(data.get('amount', 0))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid amount'}), 400
+
+    if amount <= 0:
+        return jsonify({'success': True, 'coins': 0, 'message': 'No change to dispense'})
+
+    coins = int(amount // 5)
+    remainder = amount - (coins * 5)
+
+    current_app.hardware.dispense_change(amount)
+
+    return jsonify({
+        'success': True,
+        'coins': coins,
+        'dispensing': coins * 5,
+        'wallet_credit': remainder,  # Any sub-₱5 remainder goes to wallet
+        'message': f'Dispensing {coins} × ₱5 coin{"s" if coins != 1 else ""}'
+    })

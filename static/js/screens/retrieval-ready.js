@@ -7,7 +7,7 @@ window.RetrievalReadyScreen = {
         }
 
         document.getElementById('retrieval-ready-code').innerText = AppState.compartmentCode;
-        
+
         // Show/update loading while printing receipt (may already be showing from payment screen)
         App.showLoading('Printing receipt...');
         try {
@@ -38,17 +38,15 @@ window.RetrievalReadyScreen = {
             btn.innerHTML = 'CONFIRMING...';
         }
         App.showLoading('Unlocking locker...');
-        
+
         try {
             await Api.request(`/hardware/unlock/${AppState.compartmentCode}`, {
                 method: 'POST',
                 body: JSON.stringify({ device_code: AppState.selectedRental?.device_code || '' })
             });
-            App.showLoading('Locker unlocked! Returning home...');
-            setTimeout(() => {
-                App.navigate('dashboard', {}, true);
-                App.hideLoading();
-            }, 1200);
+            App.hideLoading();
+            // Show post-retrieval choice dialog (matches post-rental flow)
+            App.showPostRetrievalDialog();
         } catch (e) {
             App.hideLoading();
             alert(e.message);

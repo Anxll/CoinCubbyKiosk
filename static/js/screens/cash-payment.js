@@ -17,7 +17,13 @@ window.CashPaymentScreen = {
         document.getElementById('cash-inserted').innerText = `₱0.00`;
         document.getElementById('cash-remaining').innerText = `₱${due.toFixed(2)}`;
         document.getElementById('cash-progress').style.width = '0%';
-        this._setContinueVisible(false);
+
+        // Reset visibility of the middle card sections
+        document.getElementById('cash-countdown-wrap').classList.remove('hidden');
+        document.getElementById('cash-continue-wrap').classList.add('hidden');
+        document.getElementById('change-choice-wrap').classList.add('hidden');
+        document.getElementById('cash-processing-wrap').classList.add('hidden');
+        document.getElementById('btn-cash-cancel').classList.remove('hidden');
 
         const hintEl = document.querySelector('.cash-hint');
         if (hintEl) {
@@ -84,14 +90,6 @@ window.CashPaymentScreen = {
         }
     },
 
-    _setContinueVisible(visible) {
-        const button = document.getElementById('btn-cash-continue');
-        if (button) {
-            button.classList.toggle('hidden', !visible);
-            button.disabled = !visible;
-        }
-    },
-
     startStream() {
         const token = encodeURIComponent(Api.getKioskToken());
         this.evtSource = new EventSource(`/api/hardware/cash/status?token=${token}`);
@@ -120,23 +118,49 @@ window.CashPaymentScreen = {
 
             // Update user instruction dynamically after cash is inserted
             const hintEl = document.querySelector('.cash-hint');
-            if (hintEl) {
-                if (inserted >= totalDue && totalDue > 0) {
-                    const creditText = overpayment > 0 ? ` Wallet credit: ₱${overpayment.toFixed(2)}.` : '';
-                    hintEl.innerHTML = `Payment complete. <strong class="text-orange">Press Continue</strong> to finish.${creditText}`;
-                    this._paymentComplete = true;
-                    this._setContinueVisible(true);
-                    if (this._timerInterval) {
-                        clearInterval(this._timerInterval);
-                        this._timerInterval = null;
-                    }
-                } else if (inserted > 0) {
-                    hintEl.innerHTML = `₱${inserted.toFixed(2)} inserted. <strong class="text-orange">Insert ₱${remaining.toFixed(2)} more</strong> to complete payment.`;
-                    this._setContinueVisible(false);
-                } else {
-                    hintEl.innerText = "Insert coins or bills into the machine";
-                    this._setContinueVisible(false);
+            if (inserted >= totalDue && totalDue > 0) {
+                this._paymentComplete = true;
+                
+                // Stop timer
+                if (this._timerInterval) {
+                    clearInterval(this._timerInterval);
+                    this._timerInterval = null;
                 }
+
+                // Hide cancel button and countdown wrapper
+                document.getElementById('btn-cash-cancel').classList.add('hidden');
+                document.getElementById('cash-countdown-wrap').classList.add('hidden');
+
+                if (overpayment > 0) {
+                    // Overpayment: show choices
+                    document.getElementById('change-amount-label').innerText = `₱${overpayment.toFixed(2)}`;
+                    document.getElementById('change-choice-wrap').classList.remove('hidden');
+                    document.getElementById('cash-continue-wrap').classList.add('hidden');
+                    if (hintEl) {
+                        hintEl.innerHTML = `Payment complete. <strong class="text-orange">Select change option</strong> below.`;
+                    }
+                } else {
+                    // Exact payment: show continue button
+                    document.getElementById('cash-continue-wrap').classList.remove('hidden');
+                    document.getElementById('change-choice-wrap').classList.add('hidden');
+                    if (hintEl) {
+                        hintEl.innerHTML = `Payment complete. <strong class="text-orange">Press Continue</strong> to finish.`;
+                    }
+                }
+            } else if (inserted > 0) {
+                if (hintEl) {
+                    hintEl.innerHTML = `₱${inserted.toFixed(2)} inserted. <strong class="text-orange">Insert ₱${remaining.toFixed(2)} more</strong> to complete payment.`;
+                }
+                document.getElementById('cash-countdown-wrap').classList.remove('hidden');
+                document.getElementById('cash-continue-wrap').classList.add('hidden');
+                document.getElementById('change-choice-wrap').classList.add('hidden');
+            } else {
+                if (hintEl) {
+                    hintEl.innerText = "Insert coins or bills into the machine";
+                }
+                document.getElementById('cash-countdown-wrap').classList.remove('hidden');
+                document.getElementById('cash-continue-wrap').classList.add('hidden');
+                document.getElementById('change-choice-wrap').classList.add('hidden');
             }
         };
 
@@ -149,23 +173,70 @@ window.CashPaymentScreen = {
         };
     },
 
+    async chooseCoins() {
+        const overpayment = AppState.cashWalletCredit || 0;
+        
+        // Hide options, show processing
+        document.getElementById('change-choice-wrap').classList.add('hidden');
+        const procWrap = document.getElementById('cash-processing-wrap');
+        procWrap.classList.remove('hidden');
+        document.getElementById('cash-processing-title').innerText = "Dispensing change...";
+        document.getElementById('cash-processing-subtitle').innerText = `Dispensing ₱${(Math.floor(overpayment / 5) * 5).toFixed(2)} in ₱5 coins. Please wait...`;
+
+        let walletCreditRemainder = 0;
+        try {
+            const res = await Api.request('/hardware/change/dispense', {
+                method: 'POST',
+                body: JSON.stringify({ amount: overpayment })
+            });
+            walletCreditRemainder = Number(res.wallet_credit || 0);
+        } catch (err) {
+            console.error("Change dispenser error, falling back to wallet credit:", err);
+            walletCreditRemainder = overpayment;
+            alert("Change dispenser issue. Remaining change has been credited to your wallet balance.");
+        }
+
+        await this.processSuccess(walletCreditRemainder);
+    },
+
+    async chooseWallet() {
+        const overpayment = AppState.cashWalletCredit || 0;
+
+        // Hide options, show processing
+        document.getElementById('change-choice-wrap').classList.add('hidden');
+        const procWrap = document.getElementById('cash-processing-wrap');
+        procWrap.classList.remove('hidden');
+        document.getElementById('cash-processing-title').innerText = "Crediting to wallet...";
+        document.getElementById('change-choice-wrap').classList.add('hidden');
+        document.getElementById('cash-processing-subtitle').innerText = "Adding change to your account balance.";
+
+        await this.processSuccess(overpayment);
+    },
+
     async continue() {
         if (!this._paymentComplete || AppState.cashInserted < AppState.totalDue) {
             return;
         }
-        const button = document.getElementById('btn-cash-continue');
-        if (button) {
-            button.disabled = true;
-        }
-        await this.processSuccess();
+        
+        // Hide continue wrap, show processing
+        document.getElementById('cash-continue-wrap').classList.add('hidden');
+        const procWrap = document.getElementById('cash-processing-wrap');
+        procWrap.classList.remove('hidden');
+        document.getElementById('cash-processing-title').innerText = "Processing payment...";
+        document.getElementById('cash-processing-subtitle').innerText = "Finishing transaction details.";
+
+        await this.processSuccess(0);
     },
 
-    async processSuccess() {
+    async processSuccess(walletCreditRemainder = 0) {
         App.showLoading('Processing payment...');
         try {
             AppState.paymentMethod = 'cash';
+            const finalCashInserted = AppState.totalDue + walletCreditRemainder;
+            
             this.cleanup();
             await Api.stopCash();
+            
             if (AppState.flow === 'rent') {
                 const res = await Api.createRental({
                     user_id: AppState.user.id,
@@ -173,34 +244,36 @@ window.CashPaymentScreen = {
                     rental_type: 'fixed',
                     duration_hours: AppState.durationHours,
                     payment_method: 'cash',
-                    cash_inserted: AppState.cashInserted
+                    cash_inserted: finalCashInserted
                 });
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
-                AppState.cashWalletCredit = Number(res.wallet_credit || AppState.cashWalletCredit || 0);
-                // Keep loading active — rental-confirmed init() will hide it after printing receipt
+                AppState.cashWalletCredit = Number(res.wallet_credit || 0);
                 App.navigate('rental-confirmed', { paymentMethod: 'cash' });
             } else {
                 const res = await Api.retrieveRental(
                     AppState.selectedRental.id,
                     'cash',
                     AppState.user.id,
-                    AppState.cashInserted
+                    finalCashInserted
                 );
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
-                AppState.cashWalletCredit = Number(res.wallet_credit || AppState.cashWalletCredit || 0);
-                // Keep loading active — retrieval-ready init() will hide it after printing receipt
+                AppState.cashWalletCredit = Number(res.wallet_credit || 0);
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
             App.hideLoading();
             alert(e.message);
-            const button = document.getElementById('btn-cash-continue');
-            if (button) {
-                button.disabled = false;
+            // In case of error, show cancel button and restore previous state
+            document.getElementById('btn-cash-cancel').classList.remove('hidden');
+            document.getElementById('cash-processing-wrap').classList.add('hidden');
+            if (AppState.cashWalletCredit > 0) {
+                document.getElementById('change-choice-wrap').classList.remove('hidden');
+            } else {
+                document.getElementById('cash-continue-wrap').classList.remove('hidden');
             }
         }
     },
@@ -224,7 +297,6 @@ window.CashPaymentScreen = {
             clearInterval(this._timerInterval);
             this._timerInterval = null;
         }
-        // Release the back button override so other screens behave normally
         App.onBackOverride = null;
     }
 };
