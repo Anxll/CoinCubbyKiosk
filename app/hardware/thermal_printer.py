@@ -17,13 +17,44 @@ PRODUCT_ID = 0x070b
 PROFILE    = 'POS-5890'
 
 
+def _notify_admin_out_of_paper():
+    """Send a notification to the admin dashboard via Supabase."""
+    try:
+        from ..services.supabase_client import get_supabase
+        db = get_supabase()
+        db.table('notifications').insert({
+            'type': 'hardware_error',
+            'title': 'Printer Out of Paper',
+            'message': 'The kiosk thermal printer has run out of paper and needs to be refilled.',
+            'priority': 'urgent'
+        }).execute()
+        logger.info("Admin notification sent regarding out of paper status.")
+    except Exception as e:
+        logger.error(f"Failed to send admin notification: {e}")
+
+
 def print_receipt(data: dict):
     """Print a formatted receipt using ESC/POS commands."""
     p = None
     try:
         from escpos.printer import Usb
 
-        p = Usb(VENDOR_ID, PRODUCT_ID, profile=PROFILE)
+        # timeout=2000 prevents blocking forever if the printer is stuck or out of paper
+        p = Usb(VENDOR_ID, PRODUCT_ID, profile=PROFILE, timeout=2000)
+
+        # Check paper status if supported by the printer firmware
+        try:
+            if hasattr(p, 'paper_status'):
+                status = p.paper_status()
+                # 1 or 2 usually indicates paper near-end or out in ESC/POS
+                if status in (1, 2):
+                    logger.error("Thermal printer is OUT OF PAPER.")
+                    _notify_admin_out_of_paper()
+                    raise RuntimeError("Printer is out of thermal paper. Please notify staff.")
+        except RuntimeError:
+            raise # Re-raise the out-of-paper error directly
+        except Exception as status_err:
+            logger.warning(f"Could not query paper status (might not be supported by this model): {status_err}")
 
         # ── Header ────────────────────────────────────────────────
         logo_path = os.path.join('static', 'images', 'logo.png')
@@ -59,8 +90,6 @@ def print_receipt(data: dict):
             p.text(f"Compartment:  {data.get('compartment_code', 'N/A')}\n")
             if data.get('module'):
                 p.text(f"Module:       {data.get('module')}\n")
-            if data.get('locker_name'):
-                p.text(f"Locker:       {data.get('locker_name')}\n")
             p.text(f"Rental Type:  {data.get('rental_type', 'N/A')}\n")
             if data.get('duration'):
                 p.text(f"Duration:     {data.get('duration')}\n")
@@ -68,9 +97,20 @@ def print_receipt(data: dict):
                 p.text(f"Expires:  {data.get('expires_at')}\n")
             p.text("--------------------------------\n")
             p.set(bold=True)
-            p.text(f"Total Paid:   P{float(data.get('total', 0)):.2f}\n")
+            total = float(data.get('total', 0))
+            p.text(f"Amount Due:   P{total:.2f}\n")
             p.set(bold=False)
-            p.text(f"Payment:      {str(data.get('payment_method', 'N/A')).title()}\n")
+            
+            payment_method = str(data.get('payment_method', 'N/A')).title()
+            p.text(f"Payment:      {payment_method}\n")
+            
+            if payment_method.lower() == 'cash':
+                cash_inserted = float(data.get('cash_inserted', total))
+                change = cash_inserted - total
+                p.text(f"Amount Paid:  P{cash_inserted:.2f}\n")
+                if change > 0:
+                    p.text(f"Change:       P{change:.2f}\n")
+                    
             if data.get('wallet_credit') and float(data.get('wallet_credit', 0)) > 0:
                 p.text(f"Wallet Credit:P{float(data.get('wallet_credit', 0)):.2f}\n")
 
@@ -83,17 +123,25 @@ def print_receipt(data: dict):
             p.text(f"Compartment:  {data.get('compartment_code', 'N/A')}\n")
             if data.get('module'):
                 p.text(f"Module:       {data.get('module')}\n")
-            if data.get('locker_name'):
-                p.text(f"Locker:       {data.get('locker_name')}\n")
             p.text(f"Rental Type:  {data.get('rental_type', 'N/A')}\n")
             p.text(f"Start Time:   {data.get('started_at', 'N/A')}\n")
             p.text(f"End Time:     {datetime.now().strftime('%b %d, %Y %I:%M %p')}\n")
             p.text("--------------------------------\n")
             p.set(bold=True)
-            p.text(f"Amount Due:   P{float(data.get('amount', 0)):.2f}\n")
+            amount = float(data.get('amount', 0))
+            p.text(f"Amount Due:   P{amount:.2f}\n")
             p.set(bold=False)
+            
+            payment_method = str(data.get('payment_method', 'N/A')).title()
             if data.get('payment_method'):
-                p.text(f"Payment:      {str(data.get('payment_method', 'N/A')).title()}\n")
+                p.text(f"Payment:      {payment_method}\n")
+                
+            if payment_method.lower() == 'cash' and amount > 0:
+                cash_inserted = float(data.get('cash_inserted', amount))
+                change = cash_inserted - amount
+                p.text(f"Amount Paid:  P{cash_inserted:.2f}\n")
+                if change > 0:
+                    p.text(f"Change:       P{change:.2f}\n")
 
         # ── Footer ────────────────────────────────────────────────
         p.text("================================\n")
@@ -114,9 +162,13 @@ def print_receipt(data: dict):
         logger.info(f"Receipt printed successfully (type={data.get('type')})")
 
     except ImportError:
-        logger.error("python-escpos is not installed. Cannot print receipt.")
+        err_msg = "python-escpos is not installed. Cannot print receipt."
+        logger.error(err_msg)
+        raise RuntimeError(err_msg)
     except Exception as e:
         logger.error(f"Printer error: {e}")
+        # Re-raise the exception so the HTTP endpoint can catch it and return a 500 error to the frontend
+        raise e
     finally:
         # CRITICAL: Always close the USB connection to release the resource.
         # Without this, the next print will fail with 'Resource busy'.

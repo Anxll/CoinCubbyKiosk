@@ -81,6 +81,12 @@ window.AdminUnlockStepsScreen = {
     async completeUnlock() {
         const errEl = document.getElementById('admin-steps-error');
         if (errEl) errEl.innerText = '';
+        
+        if (this.completedSteps.size < this.steps.length) {
+            if (errEl) errEl.innerText = 'Please check all steps before confirming unlock.';
+            return;
+        }
+
         const comp = AppState.adminSelectedCompartment;
         const btn = document.getElementById('btn-admin-complete-unlock');
         btn.disabled = true;

@@ -39,7 +39,7 @@ class AppController {
         document.addEventListener('click', () => this.resetTimeout());
         document.addEventListener('touchstart', () => this.resetTimeout());
         document.addEventListener('keydown', () => this.resetTimeout());
-        this.navigate('dashboard', { flow: 'rent' }, true);
+        this.navigate('guide', { flow: 'rent' }, true, true);
 
         // Setup listener for admin loading triggers
         document.addEventListener('click', (e) => {
@@ -61,6 +61,37 @@ class AppController {
         Header.updateClock();
     }
 
+    handleGuideTap(event) {
+        if (event && event.defaultPrevented) return;
+
+        const guideScreen = document.getElementById('screen-guide');
+        const hintEl = document.getElementById('guide-tap-hint');
+        const loadingEl = document.getElementById('guide-loading-indicator');
+        if (!guideScreen || guideScreen.classList.contains('guide-transitioning')) return;
+
+        guideScreen.classList.add('guide-transitioning');
+        guideScreen.classList.remove('guide-tapped');
+        void guideScreen.offsetWidth;
+        guideScreen.classList.add('guide-tapped');
+
+        if (hintEl) {
+            hintEl.classList.remove('guide-hint-animate');
+            hintEl.textContent = 'LOADING...';
+            void hintEl.offsetWidth;
+            hintEl.classList.add('guide-hint-animate');
+        }
+
+        if (loadingEl) {
+            loadingEl.classList.remove('hidden');
+            void loadingEl.offsetWidth;
+            loadingEl.classList.add('active');
+        }
+
+        setTimeout(() => {
+            this.navigate('dashboard', {}, true, true);
+        }, 700);
+    }
+
     resetTimeout() {
         if (this.inactivityTimeout) clearTimeout(this.inactivityTimeout);
         if (this.countdownInterval) clearInterval(this.countdownInterval);
@@ -71,7 +102,7 @@ class AppController {
         if (overlay) overlay.classList.add('hidden');
 
         // Exclude screens that manage their own timeouts or must not be interrupted
-        const noTimeoutScreens = ['dashboard', 'cash-payment', 'admin-login'];
+        const noTimeoutScreens = ['guide', 'dashboard', 'cash-payment', 'admin-login'];
         const isAdminScreen = this.currentScreen.startsWith('admin-');
         if (!noTimeoutScreens.includes(this.currentScreen) && !isAdminScreen) {
             this.inactivityTimeout = setTimeout(() => {
@@ -96,19 +127,19 @@ class AppController {
                     counterEl.innerText = this.countdownValue;
                 } else {
                     clearInterval(this.countdownInterval);
-                    this.navigate('dashboard', {}, true);
+                    this.navigate('guide', {}, true, true);
                 }
             }, 1000);
         }
     }
 
-    navigate(screenId, stateUpdates = {}, resetHistory = false) {
+    navigate(screenId, stateUpdates = {}, resetHistory = false, skipDelay = false) {
         const overlay = document.getElementById('global-loading');
         const isActive = overlay && overlay.classList.contains('active');
         const isAdminTarget = screenId.startsWith('admin-');
 
         // If loading is already active (e.g. from an API call), skip the artificial delay
-        if (isActive) {
+        if (isActive || skipDelay) {
             this._doNavigate(screenId, stateUpdates, resetHistory);
         } else {
             const showFn = isAdminTarget ? this.showAdminLoading : this.showLoading;
@@ -122,12 +153,33 @@ class AppController {
     }
 
     _doNavigate(screenId, stateUpdates, resetHistory, isGoingBack = false) {
+        // Ensure any stuck loading overlays are cleared when navigating away
+        this.hideLoading();
+        if (typeof this.hideAdminLoading === 'function') this.hideAdminLoading();
+
         // Apply state updates
         Object.assign(AppState, stateUpdates);
 
+        if (screenId === 'guide') {
+            const guideScreen = document.getElementById('screen-guide');
+            if (guideScreen) guideScreen.classList.remove('guide-transitioning', 'guide-tapped');
+            
+            const guideLoading = document.getElementById('guide-loading-indicator');
+            if (guideLoading) {
+                guideLoading.classList.remove('active');
+                guideLoading.classList.add('hidden');
+            }
+
+            const hintEl = document.getElementById('guide-tap-hint');
+            if (hintEl) {
+                hintEl.classList.remove('guide-hint-animate');
+                hintEl.textContent = 'Tap anywhere to continue';
+            }
+        }
+
         if (resetHistory) {
             this.history = [];
-            if (screenId === 'dashboard') {
+            if (screenId === 'dashboard' || screenId === 'guide') {
                 AppState.user = null;
                 AppState.selectedCompartment = null;
                 AppState.rentalType = null;
@@ -248,6 +300,38 @@ class AppController {
             if (iconEl) iconEl.innerText = icon;
             overlay.style.display = 'flex';
             overlay.classList.add('active');
+        }
+    }
+
+    showError(message, title = 'Error') {
+        this.showDialog(message, title, 'error');
+    }
+
+    showConfirm(message, title = 'Confirm Action', onConfirm = null) {
+        const overlay = document.getElementById('global-confirm-dialog');
+        if (overlay) {
+            const msgEl = document.getElementById('global-confirm-message');
+            const titleEl = document.getElementById('global-confirm-title');
+            if (msgEl) msgEl.innerText = message;
+            if (titleEl) titleEl.innerText = title;
+            
+            this._confirmCallback = onConfirm;
+            
+            overlay.style.display = 'flex';
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    hideConfirm(confirmed = false) {
+        const overlay = document.getElementById('global-confirm-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+        }
+        if (this._confirmCallback) {
+            this._confirmCallback(confirmed);
+            this._confirmCallback = null;
         }
     }
 

@@ -7,7 +7,7 @@
     <meta name="description"
         content="Coin Cubby Kiosk - Secure Storage Made Easy. Rent and retrieve compartments for your personal belongings.">
     <meta name="kiosk-api-token" content="{{ kiosk_api_token }}">
-    <title>Coin Cubby â€” Secure Storage Made Easy</title>
+    <title>Coin Cubby — Secure Storage Made Easy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -51,8 +51,155 @@
         <!-- === SCREEN CONTAINER === -->
         <main id="screen-container" class="screen-container">
 
+            <!-- SCREEN: Full-screen Guide (idle splash) -->
+            <section id="screen-guide" class="screen active" onclick="App.handleGuideTap(event)" onpointerdown="App.handleGuideTap(event)">
+                <div class="screen-body" style="height: 100%; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; gap: 20px;">
+
+                    <!-- Intro heading -->
+                    <div style="text-align: center;">
+                        <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: var(--text-dark);">Tap anywhere to rent or retrieve</h2>
+                        <p style="margin: 8px 0 0; color: var(--text-muted);">Select your service after the screen loads.</p>
+                    </div>
+
+                    <!-- Two-column step row -->
+                    <div style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 24px; width: 100%; max-width: 860px; padding: 0 24px;">
+
+                        <!-- RENT COLUMN -->
+                        <div class="guide-column" style="flex: 1;">
+                            <h3 class="guide-title"><span class="material-icons-round text-green">inventory_2</span> How to Rent</h3>
+                            <div class="guide-vstep-list" style="margin-bottom: 0;">
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-green">1</div>
+                                        <div class="guide-vstep-icon-wrap green"><span class="material-icons-round">fingerprint</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Login</div>
+                                        <div class="guide-vstep-desc">Enter your user ID to begin</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-green">2</div>
+                                        <div class="guide-vstep-icon-wrap green"><span class="material-icons-round">grid_view</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Select</div>
+                                        <div class="guide-vstep-desc">Pick an available cubby size</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-green">3</div>
+                                        <div class="guide-vstep-icon-wrap green"><span class="material-icons-round">payments</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Pay</div>
+                                        <div class="guide-vstep-desc">Insert cash or use wallet</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-green">4</div>
+                                        <div class="guide-vstep-icon-wrap green"><span class="material-icons-round">meeting_room</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Store</div>
+                                        <div class="guide-vstep-desc">Place items and close door</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="guide-divider" style="align-self: stretch;"></div>
+
+                        <!-- RETRIEVE COLUMN -->
+                        <div class="guide-column" style="flex: 1;">
+                            <h3 class="guide-title"><span class="material-icons-round text-orange">lock_open</span> How to Retrieve</h3>
+                            <div class="guide-vstep-list" style="margin-bottom: 0;">
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-orange">1</div>
+                                        <div class="guide-vstep-icon-wrap orange"><span class="material-icons-round">fingerprint</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Login</div>
+                                        <div class="guide-vstep-desc">Enter your user ID to begin</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-orange">2</div>
+                                        <div class="guide-vstep-icon-wrap orange"><span class="material-icons-round">list_alt</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Select</div>
+                                        <div class="guide-vstep-desc">Choose your active rental</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-orange">3</div>
+                                        <div class="guide-vstep-icon-wrap orange"><span class="material-icons-round">payments</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Pay</div>
+                                        <div class="guide-vstep-desc">Clear any remaining balance</div>
+                                    </div>
+                                </div>
+                                <div class="guide-vstep-item">
+                                    <div class="guide-vstep-left">
+                                        <div class="guide-vstep-number bg-orange">4</div>
+                                        <div class="guide-vstep-icon-wrap orange"><span class="material-icons-round">lock_open</span></div>
+                                    </div>
+                                    <div class="guide-vstep-content">
+                                        <div class="guide-vstep-title">Open</div>
+                                        <div class="guide-vstep-desc">Locker opens, take items</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tap anywhere button -->
+                    <button id="guide-tap-btn" style="
+                        margin-top: 20px;
+                        background: var(--green, #2a7a3b);
+                        color: #fff;
+                        border: none;
+                        border-radius: 64px;
+                        padding: 16px 48px;
+                        font-size: 17px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                        cursor: pointer;
+                        box-shadow: 0 8px 32px rgba(42,122,59,0.28);
+                        animation: guidePulse 2s ease-in-out infinite;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <span class="material-icons-round" style="font-size: 22px;">touch_app</span>
+                        Tap anywhere to continue
+                    </button>
+                    <style>
+                        @keyframes guidePulse {
+                            0%, 100% { box-shadow: 0 8px 32px rgba(42,122,59,0.28); transform: scale(1); }
+                            50%       { box-shadow: 0 12px 48px rgba(42,122,59,0.48); transform: scale(1.04); }
+                        }
+                        #guide-tap-btn:hover { filter: brightness(1.08); }
+                    </style>
+
+                    <div id="guide-loading-indicator" class="guide-loading-indicator hidden" aria-hidden="true">
+                        <div class="guide-loading-spinner"></div>
+                        <span>LOADING...</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- SCREEN: Dashboard -->
-            <section id="screen-dashboard" class="screen active">
+            <section id="screen-dashboard" class="screen">
                 <div class="dashboard-content">
                     <div class="dashboard-logo">
                         <div class="logo-icon-large">
@@ -73,7 +220,7 @@
                             <span>RETRIEVE</span>
                         </button>
                     </div>
-                    <p class="dashboard-hint">Touch a button to begin</p>
+                    <p class="dashboard-hint" style="margin-top: 24px;">Please select a service</p>
                 </div>
             </section>
 
@@ -199,7 +346,7 @@
                             </div>
                             <div class="account-info">
                                 <span class="account-label">Wallet Balance</span>
-                                <span id="account-balance" class="account-value account-value-green">â‚±325.00</span>
+                                <span id="account-balance" class="account-value account-value-green">₱325.00</span>
                             </div>
                         </div>
                         <hr class="divider">
@@ -328,7 +475,7 @@
                                 <span class="material-icons-round">info_outline</span>
                                 CURRENT RATE
                             </div>
-                            <div class="rate-amount">â‚±<span id="open-time-rate">10</span> <span class="rate-unit">per
+                            <div class="rate-amount">₱<span id="open-time-rate">10</span> <span class="rate-unit">per
                                     hour</span></div>
                         </div>
                     </div>
@@ -363,13 +510,13 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rental Fee</span>
-                            <span id="payment-rental-fee" class="summary-value">â‚±25</span>
+                            <span id="payment-rental-fee" class="summary-value">₱25</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Total Due</strong></span>
                             <span id="payment-total"
-                                class="summary-value summary-value-green"><strong>â‚±30</strong></span>
+                                class="summary-value summary-value-green"><strong>₱30</strong></span>
                         </div>
                     </div>
                     <h3 class="section-title">Choose Payment Method</h3>
@@ -404,17 +551,17 @@
                         </div>
                         <div class="wallet-row">
                             <span>Amount Due</span>
-                            <span id="wallet-amount-due" class="wallet-value">â‚±30.00</span>
+                            <span id="wallet-amount-due" class="wallet-value">₱30.00</span>
                         </div>
                         <hr class="divider">
                         <div class="wallet-row">
                             <span>Wallet Balance</span>
-                            <span id="wallet-balance" class="wallet-value">â‚±325.00</span>
+                            <span id="wallet-balance" class="wallet-value">₱325.00</span>
                         </div>
                         <hr class="divider">
                         <div class="wallet-row wallet-row-highlight">
                             <span>Remaining Balance</span>
-                            <span id="wallet-remaining" class="wallet-value wallet-value-green">â‚±295.00</span>
+                            <span id="wallet-remaining" class="wallet-value wallet-value-green">₱295.00</span>
                         </div>
                     </div>
                     <div class="login-buttons">
@@ -488,7 +635,7 @@
                                     <span class="material-icons-round">savings</span>
                                     <div class="btn-change-text">
                                         <strong>Get Coins</strong>
-                                        <span>Dispense ₱5 coins</span>
+                                        <span id="btn-change-coins-sub">Dispense ₱5 coins</span>
                                     </div>
                                 </button>
                                 <button id="btn-change-wallet" class="btn-change-option"
@@ -508,6 +655,15 @@
                                 style="font-size: 56px; color: var(--accent-orange); margin-bottom: 12px;">hourglass_empty</span>
                             <h3 id="cash-processing-title" style="margin-bottom: 4px;">Processing...</h3>
                             <p id="cash-processing-subtitle" style="color: var(--text-muted);">Please wait.</p>
+                        </div>
+
+                        <!-- 5. Collect Your Change prompt -->
+                        <div id="collect-change-wrap" class="change-choice-content hidden">
+                            <span class="material-icons-round"
+                                style="font-size: 64px; color: var(--accent-orange); margin-bottom: 12px;">savings</span>
+                            <h3 style="margin-bottom: 6px;">Collect Your Change</h3>
+                            <p style="color: var(--text-muted); margin-bottom: 8px;">Please take your <strong id="collect-change-amount" class="text-orange">₱0.00</strong> in coins from the dispenser slot.</p>
+                            <p id="collect-change-countdown" style="color: var(--text-muted); font-size: 13px;">Continuing in <strong id="collect-change-timer">5</strong>s...</p>
                         </div>
                     </div>
 
@@ -629,7 +785,7 @@
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount Due</strong></span>
                             <span id="retrieval-amount-due"
-                                class="summary-value summary-value-green"><strong>â‚±0.00</strong></span>
+                                class="summary-value summary-value-green"><strong>₱0.00</strong></span>
                         </div>
                     </div>
                     <button class="btn btn-primary btn-full btn-open-compartment" id="btn-retrieval-open"
@@ -678,6 +834,16 @@
                             <div class="admin-action-text">
                                 <strong>Emergency Unlock</strong>
                                 <span>Unlock & void rental payment</span>
+                            </div>
+                            <span class="material-icons-round admin-action-arrow">chevron_right</span>
+                        </button>
+                        <button class="admin-action-card" onclick="AdminDashboardScreen.goToInventory()">
+                            <div class="admin-action-icon" style="background: rgba(22,163,74,0.12); color: var(--green-dark);">
+                                <span class="material-icons-round">paid</span>
+                            </div>
+                            <div class="admin-action-text">
+                                <strong>Refill Change Dispenser</strong>
+                                <span id="admin-dash-coin-summary">Loading coin level...</span>
                             </div>
                             <span class="material-icons-round admin-action-arrow">chevron_right</span>
                         </button>
@@ -737,7 +903,7 @@
                 <div class="screen-body">
                     <div class="admin-warning-banner">
                         <span class="material-icons-round">admin_panel_settings</span>
-                        <span>Admin Unlock â€” If occupied, rental will be voided &amp; refunded to wallet</span>
+                        <span>Admin Unlock — If occupied, rental will be voided &amp; refunded to wallet</span>
                     </div>
                     <div class="card card-center admin-confirm-card">
                         <div class="summary-row summary-row-header">
@@ -749,28 +915,28 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Module</span>
-                            <span id="admin-confirm-module" class="summary-value">â€”</span>
+                            <span id="admin-confirm-module" class="summary-value">—</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rented By (User ID)</span>
-                            <span id="admin-confirm-user" class="summary-value">â€”</span>
+                            <span id="admin-confirm-user" class="summary-value">—</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Rental Type</span>
-                            <span id="admin-confirm-type" class="summary-value">â€”</span>
+                            <span id="admin-confirm-type" class="summary-value">—</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Start Time</span>
-                            <span id="admin-confirm-start" class="summary-value">â€”</span>
+                            <span id="admin-confirm-start" class="summary-value">—</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Amount to Refund</strong></span>
                             <span id="admin-confirm-refund" class="summary-value"
-                                style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
+                                style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
                         </div>
                         <p class="admin-refund-note">If occupied, this amount will be automatically credited to the
-                            user's wallet. Otherwise â‚±0.00 â€” no active rental.</p>
+                            user's wallet. Otherwise ₱0.00 — no active rental.</p>
                     </div>
                     <div class="login-buttons">
                         <button class="btn btn-outline"
@@ -825,13 +991,13 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">User ID</span>
-                            <span id="admin-done-user" class="summary-value">â€”</span>
+                            <span id="admin-done-user" class="summary-value">—</span>
                         </div>
                         <hr class="divider">
                         <div class="summary-row summary-row-total">
                             <span class="summary-label"><strong>Refunded to Wallet</strong></span>
                             <span id="admin-done-refund" class="summary-value"
-                                style="color:var(--admin-pink)"><strong>â‚±0.00</strong></span>
+                                style="color:var(--admin-pink)"><strong>₱0.00</strong></span>
                         </div>
                     </div>
                     <p class="admin-done-note">Rental voided. The amount has been credited to the user's wallet
@@ -842,12 +1008,96 @@
                 </div>
             </section>
 
+            <!-- SCREEN: Admin Coin Inventory -->
+            <section id="screen-admin-inventory" class="screen">
+                <div class="screen-body admin-inventory-body">
+                    <div class="admin-inventory-container">
+                        
+                        <!-- Left Panel: Details and Actions -->
+                        <div class="admin-inventory-left">
+                            
+                            <!-- Header -->
+                            <div class="admin-inventory-header">
+                                <h2 class="admin-inventory-title">Change Dispenser</h2>
+                                <p class="admin-inventory-subtitle">Manage coin inventory in the machine</p>
+                            </div>
+
+                            <!-- Current Stock Card -->
+                            <div class="admin-inventory-card inv-stock-card">
+                                <div class="inv-stock-top">
+                                    <div class="inv-stock-icon">
+                                        <span class="material-icons-round">account_balance_wallet</span>
+                                    </div>
+                                    <div class="inv-stock-details">
+                                        <span class="inv-stock-value" id="inv-coin-value">₱0</span>
+                                        <span class="inv-stock-label">Current Change Level</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="inv-stock-meta">
+                                    <span class="inv-meta-label">Last Refilled:</span>
+                                    <span class="inv-meta-value" id="inv-last-refilled">Never</span>
+                                </div>
+
+                                <!-- Low stock warning -->
+                                <div id="inv-low-warning" class="inv-low-warning" style="display:none;">
+                                    <span class="material-icons-round">warning</span>
+                                    <span>Low change level! Refill soon.</span>
+                                </div>
+                            </div>
+
+                            <!-- Add Coins Input Card -->
+                            <div class="admin-inventory-card inv-add-card">
+                                <label class="inv-add-label">ADD CHANGE AMOUNT</label>
+                                
+                                <!-- Quick add buttons -->
+                                <div class="inv-quick-btns">
+                                    <button type="button" class="inv-quick-btn" onclick="AdminInventoryScreen.addQuickAmount(100)">+₱100</button>
+                                    <button type="button" class="inv-quick-btn" onclick="AdminInventoryScreen.addQuickAmount(200)">+₱200</button>
+                                    <button type="button" class="inv-quick-btn" onclick="AdminInventoryScreen.addQuickAmount(500)">+₱500</button>
+                                </div>
+                                
+                                <!-- Input Display -->
+                                <div class="inv-display-row">
+                                    <span class="inv-display-plus">+</span>
+                                    <span class="inv-display-currency">₱</span>
+                                    <span class="inv-display-amount" id="inv-input-display">0</span>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="inv-actions">
+                                    <button type="button" id="btn-inv-add" class="inv-btn-add" onclick="AdminInventoryScreen.addCoins()" disabled>
+                                        <span class="material-icons-round">add_circle</span> CONFIRM &amp; ADD
+                                    </button>
+                                    <div class="inv-actions-sub">
+                                        <button type="button" class="inv-btn-reset" onclick="AdminInventoryScreen.resetToZero()">
+                                            RESET TO 0
+                                        </button>
+                                        <button type="button" class="inv-btn-back" onclick="App.goBack()">
+                                            BACK
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Panel: Numpad -->
+                        <div class="admin-inventory-right">
+                            <div id="numpad-admin-inventory" class="numpad-container"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
         </main>
         <!-- === TIMEOUT OVERLAY === -->
         <div id="timeout-overlay" class="timeout-overlay hidden">
             <div class="timeout-modal">
-                <div class="timeout-text">Returning to Home in</div>
+                <div class="timeout-text">Hey! Are you still there?</div>
                 <div id="timeout-counter" class="timeout-counter">15</div>
+                <div class="timeout-subtext" style="margin-top: 10px; font-size: 16px; font-weight: bold; color: var(--text-muted);">Tap anywhere to continue</div>
             </div>
         </div>
 
@@ -868,6 +1118,19 @@
                 <h3 id="global-dialog-title" class="global-dialog-title">Alert</h3>
                 <p id="global-dialog-message" class="global-dialog-message">Something went wrong.</p>
                 <button class="btn btn-primary global-dialog-btn" onclick="App.hideDialog()">OK</button>
+            </div>
+        </div>
+
+        <!-- === GLOBAL CONFIRM DIALOG OVERLAY === -->
+        <div id="global-confirm-dialog" class="global-dialog-overlay" style="display:none">
+            <div class="global-dialog-box">
+                <span id="global-confirm-icon" class="material-icons-round global-dialog-icon" style="color: var(--admin-pink, #E91E63);">help_outline</span>
+                <h3 id="global-confirm-title" class="global-dialog-title">Confirm Action</h3>
+                <p id="global-confirm-message" class="global-dialog-message">Are you sure?</p>
+                <div style="display: flex; gap: 12px; width: 100%; margin-top: 8px;">
+                    <button id="global-confirm-btn-cancel" class="btn btn-outline" style="flex: 1;" onclick="App.hideConfirm(false)">Cancel</button>
+                    <button id="global-confirm-btn-ok" class="btn btn-primary" style="flex: 1; background: var(--admin-pink, #E91E63) !important; box-shadow: 0 4px 12px rgba(233,30,99,0.2);" onclick="App.hideConfirm(true)">OK</button>
+                </div>
             </div>
         </div>
 
@@ -953,6 +1216,7 @@
     <script src="/static/js/screens/admin-confirm-unlock.js?v=7"></script>
     <script src="/static/js/screens/admin-unlock-steps.js?v=10"></script>
     <script src="/static/js/screens/admin-unlock-done.js?v=3"></script>
+    <script src="/static/js/screens/admin-inventory.js?v=1"></script>
     <script src="/static/js/app.js?v=7"></script>
 </body>
 

@@ -49,7 +49,7 @@ window.WalletPaymentScreen = {
             }
         } catch (e) {
             App.hideLoading();
-            alert(e.message);
+            App.showError(e.message);
             btn.disabled = false;
         }
     }

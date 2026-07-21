@@ -1,6 +1,9 @@
 window.AdminDashboardScreen = {
     init() {
-        // nothing needed — navigation is handled by buttons
+        // Refresh coin summary badge on the Refill card each time admin opens
+        if (window.AdminInventoryScreen) {
+            AdminInventoryScreen._updateDashSummary();
+        }
     },
 
     goToUnlock() {
@@ -9,6 +12,16 @@ window.AdminDashboardScreen = {
         if (showLoading) showLoading.call(App, 'Loading...');
         setTimeout(() => {
             App.navigate('admin-select-compartment');
+            if (hideLoading) hideLoading.call(App);
+        }, 400);
+    },
+
+    goToInventory() {
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
+        setTimeout(() => {
+            App.navigate('admin-inventory');
             if (hideLoading) hideLoading.call(App);
         }, 400);
     },

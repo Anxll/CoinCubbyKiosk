@@ -88,7 +88,7 @@ window.ActiveRentalsScreen = {
             App.navigate('retrieval-ready', { compartmentCode: res.compartment_code, amountCharged: 0 });
         } catch (e) {
             App.hideLoading();
-            alert(e.message);
+            App.showError(e.message);
         }
     }
 };

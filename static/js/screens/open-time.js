@@ -16,8 +16,20 @@ window.OpenTimeScreen = {
         }
     },
 
-    confirm() {
-        // Open time doesn't require immediate payment for rent
-        App.navigate('rental-confirmed', { rentalType: 'open_time' });
+    async confirm() {
+        App.showLoading('Starting rental...');
+        try {
+            await Api.createRental({
+                user_id: AppState.user.id,
+                compartment_id: AppState.selectedCompartment.id,
+                rental_type: 'open_time',
+                payment_method: null
+            });
+            App.hideLoading();
+            App.navigate('rental-confirmed', { rentalType: 'open_time', totalDue: 0 });
+        } catch (e) {
+            App.hideLoading();
+            App.showDialog('Failed to start rental: ' + e.message, 'Error');
+        }
     }
 };

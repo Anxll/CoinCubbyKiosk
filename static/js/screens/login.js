@@ -83,7 +83,7 @@ window.LoginScreen = {
 
     async submit() {
         if (this.userId.length !== 6 || this.pin.length !== 6) {
-            alert('Please enter complete User ID and Password.');
+            App.showDialog('Please enter complete User ID and Password.', 'Login Validation');
             return;
         }
         
@@ -95,7 +95,7 @@ window.LoginScreen = {
             const res = await Api.login(this.userId, this.pin);
             App.navigate('account', { user: res.user });
         } catch (e) {
-            alert(e.message);
+            App.showError(e.message);
         } finally {
             App.hideLoading();
             btn.disabled = false;
