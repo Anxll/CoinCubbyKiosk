@@ -100,8 +100,28 @@ window.CompartmentScreen = {
     select(id) {
         // id comes as string from onclick, compartment ids are numbers
         const comp = this.compartments.find(c => String(c.id) === String(id));
-        if (!comp || comp.status !== 'available') return;
-        
+        if (!comp) return;
+
+        if (comp.status === 'occupied') {
+            App.showDialog(
+                `Compartment ${comp.code} is currently occupied. Please select an available cubby.`,
+                'Compartment Occupied',
+                'lock'
+            );
+            return;
+        }
+
+        if (comp.status === 'maintenance') {
+            App.showDialog(
+                `Compartment ${comp.code} is under maintenance and currently unavailable.`,
+                'Unavailable',
+                'build'
+            );
+            return;
+        }
+
+        if (comp.status !== 'available') return;
+
         AppState.selectedCompartment = comp;
         this.renderGrid();
         document.getElementById('btn-confirm-compartment').disabled = false;

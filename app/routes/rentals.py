@@ -139,7 +139,7 @@ def create_rental():
                     db.table('transactions').delete().eq('transaction_id', transaction['transaction_id']).execute()
                     return jsonify({'error': pay_result['error']}), 400
             else:
-                cash_amount_paid = float(cash_inserted) if cash_inserted is not None else total_amount
+                cash_amount_paid = round(float(cash_inserted), 2) if cash_inserted is not None else total_amount
                 pay_result = record_cash_payment(user_id, total_amount, transaction['transaction_id'], amount_paid=cash_amount_paid)
                 if not pay_result['success']:
                     db.table('transactions').delete().eq('transaction_id', transaction['transaction_id']).execute()
@@ -306,7 +306,7 @@ def retrieve_rental(rental_id):
             return jsonify({'error': 'Payment method is required for this retrieval'}), 400
 
         if amount_due > 0 and payment_method:
-            cash_amount_paid = float(cash_inserted) if payment_method == 'cash' and cash_inserted is not None else None
+            cash_amount_paid = round(float(cash_inserted), 2) if payment_method == 'cash' and cash_inserted is not None else None
             pay_result = process_retrieval_payment(rental['customer_id'], rental_id, amount_due, payment_method, cash_amount_paid)
             if not pay_result.get('success'):
                 return jsonify({'error': pay_result.get('error', 'Payment failed')}), 400
@@ -315,12 +315,12 @@ def retrieve_rental(rental_id):
                 # update the open_time duration so it's recorded only after payment succeeds
                 db.table('transactions').update({
                     'end_time': now.isoformat(),
-                    'duration_minutes': charges['elapsed_hours'] * 60
+                    'duration_minutes': charges['elapsed_minutes']
                 }).eq('transaction_id', rental_id).execute()
         elif rental_type == 'open_time' and already_paid and not rental.get('end_time'):
             db.table('transactions').update({
                 'end_time': now.isoformat(),
-                'duration_minutes': charges['elapsed_hours'] * 60
+                'duration_minutes': charges['elapsed_minutes']
             }).eq('transaction_id', rental_id).execute()
 
         compartment_code = rental['lockers']['locker_number']

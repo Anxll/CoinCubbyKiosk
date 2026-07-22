@@ -36,7 +36,7 @@ const Header = {
     },
 
     update(screenId) {
-        if (screenId === 'dashboard') {
+        if (screenId === 'dashboard' || screenId === 'welcome') {
             this.el.classList.add('hidden');
             this.el.classList.remove('admin-header-active');
             return;

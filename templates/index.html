@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css?v=9">
+    <link rel="stylesheet" href="/static/css/styles.css?v=10">
 </head>
 
 <body>
@@ -52,92 +52,127 @@
         <main id="screen-container" class="screen-container">
 
             <!-- SCREEN: Welcome Intro -->
-            <section id="screen-welcome" class="screen active">
-                <div class="dashboard-content" style="cursor: pointer;" onclick="App.navigate('dashboard', {}, true)">
-                    <div class="dashboard-logo">
-                        <div class="logo-icon-large">
-                            <span class="material-icons-round">touch_app</span>
+            <section id="screen-welcome" class="screen active" onclick="App.navigate('dashboard', {}, true)" style="cursor:pointer;">
+                <!-- Top banner -->
+                <div class="welcome-banner">
+                    <div class="welcome-brand">
+                        <div class="welcome-brand-icon">
+                            <span class="material-icons-round">lock</span>
                         </div>
-                        <h1 class="dashboard-title">Tap anywhere to rent or retrieve</h1>
-                        <p class="dashboard-subtitle">Select your service after the screen loads.</p>
+                        <span class="welcome-brand-name">Coin Cubby</span>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; max-width: 920px; margin-top: 24px;">
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">fingerprint</span>
-                                <div>
+                    <div class="welcome-banner-center">
+                        <h1 class="welcome-title">Tap anywhere to begin</h1>
+                        <p class="welcome-subtitle">Follow the steps below to rent or retrieve your items</p>
+                    </div>
+                    <div class="welcome-banner-right">
+                        <span class="material-icons-round" style="font-size:32px; opacity:0.8;">touch_app</span>
+                    </div>
+                </div>
+
+                <!-- Two-column guide -->
+                <div class="welcome-guide-grid">
+
+                    <!-- How to Rent -->
+                    <div class="welcome-guide-col">
+                        <div class="welcome-col-header welcome-col-header-green">
+                            <span class="material-icons-round">inventory_2</span>
+                            <span>How to Rent</span>
+                        </div>
+                        <div class="welcome-step-list">
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-green">1</div>
+                                <div class="welcome-step-icon welcome-step-icon-green">
+                                    <span class="material-icons-round">fingerprint</span>
+                                </div>
+                                <div class="welcome-step-text">
                                     <strong>Login</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Enter your user ID to begin</div>
+                                    <span>Enter your user ID</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">menu</span>
-                                <div>
-                                    <strong>Login</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Enter your user ID to begin</div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-green">2</div>
+                                <div class="welcome-step-icon welcome-step-icon-green">
+                                    <span class="material-icons-round">grid_view</span>
+                                </div>
+                                <div class="welcome-step-text">
+                                    <strong>Select Cubby</strong>
+                                    <span>Pick an available size</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">check_circle</span>
-                                <div>
-                                    <strong>Select</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Pick an available cubby size</div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-green">3</div>
+                                <div class="welcome-step-icon welcome-step-icon-green">
+                                    <span class="material-icons-round">payments</span>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">list</span>
-                                <div>
-                                    <strong>Select</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Choose your active rental</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">payments</span>
-                                <div>
+                                <div class="welcome-step-text">
                                     <strong>Pay</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Insert cash or use wallet</div>
+                                    <span>Cash or wallet</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">payment</span>
-                                <div>
-                                    <strong>Pay</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Clear any remaining balance</div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-green">4</div>
+                                <div class="welcome-step-icon welcome-step-icon-green">
+                                    <span class="material-icons-round">door_front</span>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">door_front</span>
-                                <div>
-                                    <strong>Store</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Place items and close door</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="dashboard-card" style="padding: 20px;"> 
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">lock_open</span>
-                                <div>
-                                    <strong>Open</strong>
-                                    <div style="font-size:13px; color:var(--text-muted);">Locker opens, take items</div>
+                                <div class="welcome-step-text">
+                                    <strong>Store Items</strong>
+                                    <span>Place items &amp; close door</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-full" style="margin-top: 24px; max-width: 420px;" onclick="event.stopPropagation(); App.navigate('dashboard', {}, true)">
-                        <span class="material-icons-round">touch_app</span> Tap anywhere to continue
-                    </button>
+
+                    <!-- How to Retrieve -->
+                    <div class="welcome-guide-col">
+                        <div class="welcome-col-header welcome-col-header-orange">
+                            <span class="material-icons-round">lock_open</span>
+                            <span>How to Retrieve</span>
+                        </div>
+                        <div class="welcome-step-list">
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-orange">1</div>
+                                <div class="welcome-step-icon welcome-step-icon-orange">
+                                    <span class="material-icons-round">fingerprint</span>
+                                </div>
+                                <div class="welcome-step-text">
+                                    <strong>Login</strong>
+                                    <span>Enter your user ID</span>
+                                </div>
+                            </div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-orange">2</div>
+                                <div class="welcome-step-icon welcome-step-icon-orange">
+                                    <span class="material-icons-round">receipt_long</span>
+                                </div>
+                                <div class="welcome-step-text">
+                                    <strong>Select Rental</strong>
+                                    <span>Choose your active rental</span>
+                                </div>
+                            </div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-orange">3</div>
+                                <div class="welcome-step-icon welcome-step-icon-orange">
+                                    <span class="material-icons-round">account_balance_wallet</span>
+                                </div>
+                                <div class="welcome-step-text">
+                                    <strong>Pay Balance</strong>
+                                    <span>Clear remaining amount</span>
+                                </div>
+                            </div>
+                            <div class="welcome-step">
+                                <div class="welcome-step-num welcome-step-num-orange">4</div>
+                                <div class="welcome-step-icon welcome-step-icon-orange">
+                                    <span class="material-icons-round">lock_open</span>
+                                </div>
+                                <div class="welcome-step-text">
+                                    <strong>Retrieve</strong>
+                                    <span>Locker opens, take items</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 

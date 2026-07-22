@@ -50,6 +50,7 @@ def calculate_open_time_charges(started_at_str: str, rate_per_hour: float) -> di
 
     return {
         'elapsed_hours': round(elapsed_minutes / 60, 4),
+        'elapsed_minutes': int(round(elapsed_minutes)),
         'rental_fee': total,
         'total': total
     }
@@ -70,7 +71,7 @@ def calculate_overdue_charges(expires_at_str: str, rate_per_hour: float) -> dict
     now = datetime.now(timezone.utc)
 
     if now <= expires_at:
-        return {'overdue_hours': 0, 'overdue_fee': 0, 'total': 0}
+        return {'overdue_hours': 0, 'overdue_minutes': 0, 'overdue_fee': 0, 'total': 0}
 
     overdue_minutes = (now - expires_at).total_seconds() / 60
 
@@ -86,6 +87,7 @@ def calculate_overdue_charges(expires_at_str: str, rate_per_hour: float) -> dict
 
     return {
         'overdue_hours': round(overdue_minutes / 60, 4),
+        'overdue_minutes': int(round(overdue_minutes)),
         'overdue_fee': overdue_fee,
         'total': overdue_fee
     }
