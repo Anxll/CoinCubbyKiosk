@@ -135,7 +135,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-full" style="margin-top: 24px; max-width: 420px;" onclick="App.navigate('dashboard', {}, true)">
+                    <button class="btn btn-primary btn-full" style="margin-top: 24px; max-width: 420px;" onclick="event.stopPropagation(); App.navigate('dashboard', {}, true)">
                         <span class="material-icons-round">touch_app</span> Tap anywhere to continue
                     </button>
                 </div>
@@ -1010,8 +1010,9 @@
         <!-- === TIMEOUT OVERLAY === -->
         <div id="timeout-overlay" class="timeout-overlay hidden">
             <div class="timeout-modal">
-                <div class="timeout-text">Returning to Home in</div>
-                <div id="timeout-counter" class="timeout-counter">15</div>
+                <div class="timeout-text">Hey! Are you still there?</div>
+                <div class="timeout-subtext">Tap anywhere to continue</div>
+                <div class="timeout-counter" id="timeout-counter">15</div>
             </div>
         </div>
 

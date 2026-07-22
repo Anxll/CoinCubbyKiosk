@@ -71,7 +71,7 @@ class AppController {
         if (overlay) overlay.classList.add('hidden');
 
         // Exclude screens that manage their own timeouts or must not be interrupted
-        const noTimeoutScreens = ['dashboard', 'cash-payment', 'admin-login'];
+        const noTimeoutScreens = ['cash-payment', 'admin-login'];
         const isAdminScreen = this.currentScreen.startsWith('admin-');
         if (!noTimeoutScreens.includes(this.currentScreen) && !isAdminScreen) {
             this.inactivityTimeout = setTimeout(() => {
@@ -89,6 +89,13 @@ class AppController {
         if (overlay && counterEl) {
             counterEl.innerText = this.countdownValue;
             overlay.classList.remove('hidden');
+            overlay.style.cursor = 'pointer';
+            overlay.onclick = () => {
+                if (this.isCountingDown) {
+                    this.navigate('welcome', {}, true);
+                    this.resetTimeout();
+                }
+            };
 
             this.countdownInterval = setInterval(() => {
                 this.countdownValue--;

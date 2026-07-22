@@ -1639,7 +1639,14 @@ h4 {
     font-size: 20px;
     font-weight: 700;
     color: var(--text-dark);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+}
+
+.timeout-subtext {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 18px;
 }
 
 .timeout-counter {
