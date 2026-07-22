@@ -22,13 +22,11 @@ def create_app():
     from .routes.compartments import compartments_bp
     from .routes.rentals import rentals_bp
     from .routes.hardware import hardware_bp
-    from .routes.inventory import inventory_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(compartments_bp, url_prefix='/api/compartments')
     app.register_blueprint(rentals_bp, url_prefix='/api/rentals')
     app.register_blueprint(hardware_bp, url_prefix='/api/hardware')
-    app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
 
     # Serve the kiosk UI
     from flask import render_template

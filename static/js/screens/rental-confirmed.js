@@ -29,23 +29,21 @@ window.RentalConfirmedScreen = {
                 type: 'rental',
                 compartment_code: AppState.selectedCompartment.code,
                 module: AppState.selectedCompartment.module,
+                locker_name: `${AppState.selectedCompartment.size ? AppState.selectedCompartment.size.charAt(0).toUpperCase() + AppState.selectedCompartment.size.slice(1) : ''} Locker (${AppState.selectedCompartment.code})`,
                 rental_type: AppState.rentalType === 'fixed' ? 'Fixed Duration' : 'Open Time',
                 duration: AppState.rentalType === 'fixed' ? `${AppState.durationHours} hours` : null,
                 expires_at: expiresAt,
                 total: AppState.totalDue,
                 payment_method: AppState.paymentMethod || 'None',
-                wallet_credit: AppState.walletCredit || 0,
-                cash_inserted: AppState.cashInserted || AppState.totalDue
+                wallet_credit: AppState.walletCredit || 0
             });
         } catch (e) {
             console.error("Printer error:", e);
-            // Notify the user if there's a printer issue (like out of paper)
-            App.showDialog(e.message || "Unable to print receipt. Please notify staff if needed.", 'Printer Status');
         } finally {
             // Add a slight delay so the printing loading screen is visible long enough
             setTimeout(() => {
                 App.hideLoading();
-            }, 5000);
+            }, 2500);
         }
     },
 
@@ -67,7 +65,7 @@ window.RentalConfirmedScreen = {
             }, 1200);
         } catch (e) {
             App.hideLoading();
-            App.showError(e.message);
+            alert(e.message);
             btn.disabled = false;
             btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
         }

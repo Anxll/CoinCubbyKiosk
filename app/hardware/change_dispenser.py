@@ -27,22 +27,6 @@ PULSE_DURATION = 1.5
 INTER_COIN_DELAY = 0.5
 
 
-def _notify_admin_dispenser_error(requested_coins: int, dispensed_coins: int):
-    """Send a notification to the admin dashboard via Supabase."""
-    try:
-        from ..services.supabase_client import get_supabase
-        db = get_supabase()
-        db.table('notifications').insert({
-            'type': 'hardware_error',
-            'title': 'Change Dispenser Error',
-            'message': f'The kiosk change dispenser failed to dispense the full amount. Requested: {requested_coins} coins, Dispensed: {dispensed_coins} coins. Please check the coin level or mechanism.',
-            'priority': 'high'
-        }).execute()
-        logger.info("Admin notification sent regarding change dispenser issue.")
-    except Exception as e:
-        logger.error(f"Failed to send admin notification: {e}")
-
-
 class ChangeDispenser:
     """
     DIY change dispenser using a servo on GPIO 23.
@@ -59,7 +43,6 @@ class ChangeDispenser:
 
         if not self.simulation_mode:
             try:
-                # pyrefly: ignore [missing-import]
                 from gpiozero import Servo
                 # min_pulse_width / max_pulse_width tuned for SG90-type servos
                 self._servo = Servo(
@@ -104,31 +87,20 @@ class ChangeDispenser:
             return coins
 
         with self._lock:
-            dispensed_count = 0
             for i in range(coins):
                 try:
                     logger.info(f"  Coin {i + 1}/{coins}: servo → 180°")
                     self._servo.max()          # Rotate to 180° — pushes coin
                     time.sleep(PULSE_DURATION) # Hold for 1500ms
-                    dispensed_count += 1
+                    self._servo.min()          # Return to 0° — reset
+                    logger.info(f"  Coin {i + 1}/{coins}: servo → 0° (rest)")
+                    if i < coins - 1:
+                        time.sleep(INTER_COIN_DELAY)
                 except Exception as e:
-                    logger.error(f"Change dispenser error during coin {i + 1} extraction: {e}")
+                    logger.error(f"Change dispenser error on coin {i + 1}: {e}")
                     break
-                finally:
-                    # Always ensure servo tries to return to rest, even on error
-                    try:
-                        self._servo.min()          # Return to 0° — reset
-                        logger.info(f"  Coin {i + 1}/{coins}: servo → 0° (rest)")
-                    except Exception as reset_e:
-                        logger.error(f"Failed to return servo to rest position: {reset_e}")
-                
-                if i < coins - 1:
-                    time.sleep(INTER_COIN_DELAY)
-            
-            if dispensed_count < coins:
-                _notify_admin_dispenser_error(coins, dispensed_count)
 
-        return dispensed_count
+        return coins
 
     def dispense_async(self, amount: float, on_complete=None):
         """

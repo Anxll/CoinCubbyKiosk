@@ -87,7 +87,7 @@ window.RetrieveLoginScreen = {
 
     async submit() {
         if (this.userId.length !== 6 || this.pin.length !== 6) {
-            App.showDialog('Please enter complete User ID and Password.', 'Login Validation');
+            alert('Please enter complete User ID and Password.');
             return;
         }
         
@@ -103,7 +103,7 @@ window.RetrieveLoginScreen = {
         } catch (e) {
             App.hideLoading();
             btn.disabled = false;
-            App.showError(e.message);
+            alert(e.message);
         }
     }
 };

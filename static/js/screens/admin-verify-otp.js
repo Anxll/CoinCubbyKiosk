@@ -118,7 +118,24 @@ window.AdminVerifyOtpScreen = {
         if (showLoading) showLoading.call(App, 'Loading...');
 
         try {
-            const res = await Api.adminVerifyOtp(AppState.adminId, this.otp);
+            const response = await fetch('/api/auth/admin/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Kiosk-Token': document.querySelector('meta[name="kiosk-api-token"]')?.content || ''
+                },
+                body: JSON.stringify({
+                    admin_id: AppState.adminId,
+                    verification_code: this.otp
+                })
+            });
+
+            const res = await response.json();
+            console.log('OTP verification response:', res);
+
+            if (!response.ok) {
+                throw new Error(res.error || 'Invalid Verification PIN. Access Denied.');
+            }
 
             if (!res.success) {
                 throw new Error('Invalid Verification PIN. Access Denied.');

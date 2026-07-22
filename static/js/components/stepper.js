@@ -8,7 +8,7 @@ const Stepper = {
     update(screenId, flow) {
         // Admin flow stepper
         if (screenId && screenId.startsWith('admin-')) {
-            if (screenId === 'admin-dashboard' || screenId === 'admin-unlock-done' || screenId === 'admin-inventory') {
+            if (screenId === 'admin-dashboard' || screenId === 'admin-unlock-done') {
                 this.container.classList.add('hidden');
                 return;
             }
@@ -25,7 +25,7 @@ const Stepper = {
         }
 
         // User flow stepper
-        if (screenId === 'dashboard' || screenId === 'guide' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
+        if (screenId === 'dashboard' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
             this.container.classList.add('hidden');
             return;
         }
