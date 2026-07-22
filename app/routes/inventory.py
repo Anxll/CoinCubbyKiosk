@@ -101,3 +101,39 @@ def refill_inventory():
     except Exception as e:
         print(f"Error refilling inventory: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+
+
+@inventory_bp.route('/cashout', methods=['POST'])
+@require_kiosk_token
+def cashout_inventory():
+    """Cash out the current coin inventory balance."""
+    try:
+        db = get_supabase()
+
+        device_id = _get_device_id(db)
+        if device_id is None:
+            return jsonify({'error': f'Device not found for kiosk code: {Config.KIOSK_ID}'}), 404
+
+        result = db.table('device_inventory').select('change_amount').eq('device_id', device_id).execute()
+        if not result.data:
+            return jsonify({'error': 'Device inventory not found. Please load the status page first.'}), 404
+
+        current_amount = float(result.data[0].get('change_amount', 0))
+        update_data = {
+            'change_amount': 0.00,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+
+        update_res = db.table('device_inventory').update(update_data).eq('device_id', device_id).execute()
+        if not update_res.data:
+            return jsonify({'error': 'Failed to cash out inventory'}), 500
+
+        return jsonify({
+            'message': 'Inventory cashed out successfully',
+            'cashed_out_amount': current_amount,
+            'change_amount': 0.00
+        }), 200
+
+    except Exception as e:
+        print(f"Error cashing out inventory: {e}")
+        return jsonify({'error': 'Internal server error'}), 500

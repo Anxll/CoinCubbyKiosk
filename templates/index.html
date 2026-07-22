@@ -51,8 +51,98 @@
         <!-- === SCREEN CONTAINER === -->
         <main id="screen-container" class="screen-container">
 
+            <!-- SCREEN: Welcome Intro -->
+            <section id="screen-welcome" class="screen active">
+                <div class="dashboard-content" style="cursor: pointer;" onclick="App.navigate('dashboard', {}, true)">
+                    <div class="dashboard-logo">
+                        <div class="logo-icon-large">
+                            <span class="material-icons-round">touch_app</span>
+                        </div>
+                        <h1 class="dashboard-title">Tap anywhere to rent or retrieve</h1>
+                        <p class="dashboard-subtitle">Select your service after the screen loads.</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; max-width: 920px; margin-top: 24px;">
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">fingerprint</span>
+                                <div>
+                                    <strong>Login</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Enter your user ID to begin</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">menu</span>
+                                <div>
+                                    <strong>Login</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Enter your user ID to begin</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">check_circle</span>
+                                <div>
+                                    <strong>Select</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Pick an available cubby size</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">list</span>
+                                <div>
+                                    <strong>Select</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Choose your active rental</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">payments</span>
+                                <div>
+                                    <strong>Pay</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Insert cash or use wallet</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">payment</span>
+                                <div>
+                                    <strong>Pay</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Clear any remaining balance</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-green);">door_front</span>
+                                <div>
+                                    <strong>Store</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Place items and close door</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card" style="padding: 20px;"> 
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                                <span class="material-icons-round" style="font-size:28px; color:var(--primary-yellow);">lock_open</span>
+                                <div>
+                                    <strong>Open</strong>
+                                    <div style="font-size:13px; color:var(--text-muted);">Locker opens, take items</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" style="margin-top: 24px; max-width: 420px;" onclick="App.navigate('dashboard', {}, true)">
+                        <span class="material-icons-round">touch_app</span> Tap anywhere to continue
+                    </button>
+                </div>
+            </section>
+
             <!-- SCREEN: Dashboard -->
-            <section id="screen-dashboard" class="screen active">
+            <section id="screen-dashboard" class="screen">
                 <div class="dashboard-content">
                     <div class="dashboard-logo">
                         <div class="logo-icon-large">
@@ -903,6 +993,9 @@
                     <div style="display: flex; gap: 12px; width: 100%; max-width: 560px;">
                         <button class="btn btn-outline" style="flex: 1;" onclick="AdminInventoryScreen.clear()">
                             <span class="material-icons-round" style="font-size: 18px; margin-right: 6px;">clear</span> CLEAR
+                        </button>
+                        <button id="btn-admin-cashout" class="btn btn-outline" style="flex: 1;" onclick="AdminInventoryScreen.cashout()">
+                            <span class="material-icons-round" style="font-size: 18px; margin-right: 6px;">payments</span> CASH OUT
                         </button>
                         <button class="btn btn-outline" style="flex: 1;" onclick="App.goBack()">BACK</button>
                         <button id="btn-admin-refill" class="btn" style="flex: 2; background-color: var(--primary-green); color: var(--bg-dark); font-weight: 700;" onclick="AdminInventoryScreen.submit()">

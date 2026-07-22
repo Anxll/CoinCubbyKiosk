@@ -59,6 +59,12 @@ class ApiClient {
         return this.request(`/rentals/active/${userId}`);
     }
 
+    static async cashoutInventory() {
+        return this.request('/inventory/cashout', {
+            method: 'POST'
+        });
+    }
+
     static async retrieveRental(rentalId, paymentMethod = null, userId = null, cashInserted = null) {
         const body = { payment_method: paymentMethod };
         if (userId) {

@@ -39,7 +39,7 @@ class AppController {
         document.addEventListener('click', () => this.resetTimeout());
         document.addEventListener('touchstart', () => this.resetTimeout());
         document.addEventListener('keydown', () => this.resetTimeout());
-        this.navigate('dashboard', { flow: 'rent' }, true);
+        this.navigate('welcome', { flow: 'rent' }, true);
 
         // Setup listener for admin loading triggers
         document.addEventListener('click', (e) => {
