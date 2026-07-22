@@ -104,7 +104,7 @@ window.CompartmentScreen = {
 
         if (comp.status === 'occupied') {
             App.showDialog(
-                `Compartment ${comp.code} is currently occupied. Please select an available cubby.`,
+                `Compartment ${comp.code} is currently occupied. Please choose an available compartment.`,
                 'Compartment Occupied',
                 'lock'
             );
@@ -113,14 +113,12 @@ window.CompartmentScreen = {
 
         if (comp.status === 'maintenance') {
             App.showDialog(
-                `Compartment ${comp.code} is under maintenance and currently unavailable.`,
-                'Unavailable',
+                `Compartment ${comp.code} is under maintenance and cannot be rented at this time.`,
+                'Under Maintenance',
                 'build'
             );
             return;
         }
-
-        if (comp.status !== 'available') return;
 
         AppState.selectedCompartment = comp;
         this.renderGrid();
