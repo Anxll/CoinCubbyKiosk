@@ -901,6 +901,9 @@
 
                     <!-- Action Buttons -->
                     <div style="display: flex; gap: 12px; width: 100%; max-width: 560px;">
+                        <button class="btn btn-outline" style="flex: 1;" onclick="AdminInventoryScreen.clear()">
+                            <span class="material-icons-round" style="font-size: 18px; margin-right: 6px;">clear</span> CLEAR
+                        </button>
                         <button class="btn btn-outline" style="flex: 1;" onclick="App.goBack()">BACK</button>
                         <button id="btn-admin-refill" class="btn" style="flex: 2; background-color: var(--primary-green); color: var(--bg-dark); font-weight: 700;" onclick="AdminInventoryScreen.submit()">
                             <span class="material-icons-round" style="font-size: 18px; margin-right: 6px;">check_circle</span> CONFIRM REFILL
