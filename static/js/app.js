@@ -71,7 +71,7 @@ class AppController {
         if (overlay) overlay.classList.add('hidden');
 
         // Exclude screens that manage their own timeouts or must not be interrupted
-        const noTimeoutScreens = ['cash-payment', 'admin-login'];
+        const noTimeoutScreens = ['cash-payment', 'admin-login', 'welcome'];
         const isAdminScreen = this.currentScreen.startsWith('admin-');
         if (!noTimeoutScreens.includes(this.currentScreen) && !isAdminScreen) {
             this.inactivityTimeout = setTimeout(() => {
@@ -103,7 +103,21 @@ class AppController {
                     counterEl.innerText = this.countdownValue;
                 } else {
                     clearInterval(this.countdownInterval);
-                    this.navigate('dashboard', {}, true);
+                    overlay.classList.add('hidden');
+                    this.isCountingDown = false;
+                    // If a user is logged in, show "Logging out..." before clearing session
+                    if (AppState.user) {
+                        this.showLoading('Logging out...');
+                        setTimeout(() => {
+                            this.hideLoading();
+                            this.navigate('dashboard', {}, true);
+                        }, 1500);
+                    } else if (this.currentScreen === 'dashboard') {
+                        // On home screen with no user — go to step-by-step guide
+                        this.navigate('welcome', {}, true);
+                    } else {
+                        this.navigate('dashboard', {}, true);
+                    }
                 }
             }, 1000);
         }
@@ -300,6 +314,14 @@ class AppController {
             overlay.classList.remove('active');
             overlay.style.display = 'none';
         }
+    }
+
+    logout() {
+        this.showLoading('Logging out...');
+        setTimeout(() => {
+            this.hideLoading();
+            this.navigate('dashboard', {}, true);
+        }, 1500);
     }
 }
 window.App = new AppController();

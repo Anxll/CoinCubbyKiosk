@@ -199,6 +199,10 @@
                         </button>
                     </div>
                     <p class="dashboard-hint">Touch a button to begin</p>
+                    <button class="btn btn-text dashboard-guide-btn" onclick="App.navigate('welcome', {}, true)">
+                        <span class="material-icons-round">help_outline</span>
+                        How to use?
+                    </button>
                 </div>
             </section>
 
@@ -343,7 +347,9 @@
                         </div>
                     </div>
                     <div class="login-buttons">
-                        <button class="btn btn-outline" onclick="App.navigate('dashboard')">RETURN HOME</button>
+                        <button id="btn-account-logout" class="btn btn-outline" onclick="App.logout()">
+                            <span class="material-icons-round" style="font-size:18px; margin-right:6px;">logout</span> LOGOUT
+                        </button>
                         <button class="btn btn-primary" id="btn-select-cubby"
                             onclick="AccountScreen.continueFlow()">SELECT CUBBY</button>
                     </div>

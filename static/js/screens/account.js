@@ -31,6 +31,11 @@ window.AccountScreen = {
         }
         dotsContainer.innerHTML = html;
 
+        const returnBtn = document.getElementById('btn-account-logout');
+        if (returnBtn) {
+            returnBtn.innerHTML = '<span class="material-icons-round" style="font-size:18px; margin-right:6px;">logout</span> LOGOUT';
+        }
+
         const btn = document.getElementById('btn-select-cubby');
         if (btn) {
             btn.disabled = activeCount >= maxRentals;

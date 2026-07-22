@@ -556,6 +556,32 @@ h4 {
     font-weight: 600;
 }
 
+.dashboard-guide-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dashboard-guide-btn:hover,
+.dashboard-guide-btn:active {
+    background: rgba(0,0,0,0.05);
+    color: var(--primary-green);
+}
+
+.dashboard-guide-btn .material-icons-round {
+    font-size: 18px;
+}
+
 /* --- WELCOME GUIDE SCREEN --- */
 #screen-welcome {
     display: flex;

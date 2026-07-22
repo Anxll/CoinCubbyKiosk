@@ -25,7 +25,7 @@ const Stepper = {
         }
 
         // User flow stepper
-        if (screenId === 'dashboard' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
+        if (screenId === 'dashboard' || screenId === 'welcome' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
             this.container.classList.add('hidden');
             return;
         }
