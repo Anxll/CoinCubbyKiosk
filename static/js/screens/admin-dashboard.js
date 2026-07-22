@@ -13,6 +13,16 @@ window.AdminDashboardScreen = {
         }, 400);
     },
 
+    goToInventory() {
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+        if (showLoading) showLoading.call(App, 'Loading...');
+        setTimeout(() => {
+            App.navigate('admin-inventory');
+            if (hideLoading) hideLoading.call(App);
+        }, 400);
+    },
+
     exitAdmin() {
         const showLoading = App?.showAdminLoading ?? App?.showLoading;
         const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
