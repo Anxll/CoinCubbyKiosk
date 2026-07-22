@@ -45,24 +45,46 @@ window.AdminInventoryScreen = {
         }
     },
 
-    async fetchStatus() {
+    async fetchStatus(showOverlay = true) {
+        const btnRefill = document.getElementById('btn-admin-refill');
+        const showLoading = App?.showAdminLoading ?? App?.showLoading;
+        const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
+
+        if (showOverlay && btnRefill) {
+            btnRefill.disabled = true;
+            btnRefill.style.opacity = '0.5';
+        }
+
+        if (showOverlay && showLoading) {
+            showLoading.call(App, 'Loading inventory...');
+        }
+
         try {
             const data = await ApiClient.request('/inventory/status');
             
-            document.getElementById('admin-inventory-balance').innerText = data.change_amount.toFixed(2);
-            document.getElementById('admin-inventory-last-amount').innerText = data.last_refilled_amount.toFixed(2);
+            const balanceEl = document.getElementById('admin-inventory-balance');
+            const lastAmountEl = document.getElementById('admin-inventory-last-amount');
+            const lastDateEl = document.getElementById('admin-inventory-last-date');
+
+            if (balanceEl) balanceEl.innerText = data.change_amount.toFixed(2);
+            if (lastAmountEl) lastAmountEl.innerText = data.last_refilled_amount.toFixed(2);
             
             if (data.last_refilled_at) {
                 const date = new Date(data.last_refilled_at);
-                document.getElementById('admin-inventory-last-date').innerText = date.toLocaleString('en-US', { 
+                if (lastDateEl) lastDateEl.innerText = date.toLocaleString('en-US', { 
                     month: 'short', day: 'numeric', year: 'numeric', 
                     hour: 'numeric', minute: '2-digit', hour12: true 
                 });
-            } else {
-                document.getElementById('admin-inventory-last-date').innerText = 'Never';
+            } else if (lastDateEl) {
+                lastDateEl.innerText = 'Never';
             }
         } catch (e) {
             console.error("Error fetching inventory status:", e);
+        } finally {
+            if (showOverlay && hideLoading) {
+                hideLoading.call(App);
+            }
+            this.updateDisplay();
         }
     },
 
@@ -79,23 +101,30 @@ window.AdminInventoryScreen = {
         if (showLoading) showLoading.call(App, 'Processing...');
         
         try {
-            const data = await ApiClient.request('/inventory/refill', {
+            await ApiClient.request('/inventory/refill', {
                 method: 'POST',
                 body: JSON.stringify({ amount: totalAmount })
             });
             
-            if (hideLoading) hideLoading.call(App);
-            
             // Success
             this.inputCoins = 0;
             this.updateDisplay();
-            await this.fetchStatus();
-            alert(`Successfully added ₱${totalAmount.toFixed(2)} to inventory!`);
+            await this.fetchStatus(false);
+            if (App?.showDialog) {
+                App.showDialog(`Successfully added ₱${totalAmount.toFixed(2)} to inventory!`, 'Inventory Updated', 'check_circle');
+            } else {
+                alert(`Successfully added ₱${totalAmount.toFixed(2)} to inventory!`);
+            }
         } catch (e) {
             console.error("Error refilling:", e);
-            if (hideLoading) hideLoading.call(App);
-            alert("Network error while refilling: " + (e.message || "Unknown error"));
+            if (App?.showDialog) {
+                App.showDialog("Network error while refilling: " + (e.message || "Unknown error"), 'Refill Failed', 'warning');
+            } else {
+                alert("Network error while refilling: " + (e.message || "Unknown error"));
+            }
             if (btnRefill) btnRefill.disabled = false;
+        } finally {
+            if (hideLoading) hideLoading.call(App);
         }
     }
 };
