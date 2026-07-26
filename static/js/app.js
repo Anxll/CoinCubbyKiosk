@@ -9,6 +9,7 @@ const AppState = {
     paymentMethod: null,
     cashInserted: 0,
     cashWalletCredit: 0,
+    amountPaid: 0,       // gross cash inserted for retrieval flow
     activeRentals: [],
     selectedRental: null,
     // Admin state
@@ -39,7 +40,7 @@ class AppController {
         document.addEventListener('click', () => this.resetTimeout());
         document.addEventListener('touchstart', () => this.resetTimeout());
         document.addEventListener('keydown', () => this.resetTimeout());
-        this.navigate('welcome', { flow: 'rent' }, true);
+        this.navigate('dashboard', { flow: 'rent' }, true);
 
         // Setup listener for admin loading triggers
         document.addEventListener('click', (e) => {
@@ -71,7 +72,7 @@ class AppController {
         if (overlay) overlay.classList.add('hidden');
 
         // Exclude screens that manage their own timeouts or must not be interrupted
-        const noTimeoutScreens = ['cash-payment', 'admin-login', 'welcome'];
+        const noTimeoutScreens = ['welcome', 'cash-payment', 'admin-login', 'locker-warning', 'rental-confirmed', 'retrieval-ready'];
         const isAdminScreen = this.currentScreen.startsWith('admin-');
         if (!noTimeoutScreens.includes(this.currentScreen) && !isAdminScreen) {
             this.inactivityTimeout = setTimeout(() => {
@@ -157,6 +158,7 @@ class AppController {
                 AppState.paymentMethod = null;
                 AppState.cashInserted = 0;
                 AppState.cashWalletCredit = 0;
+                AppState.amountPaid = 0;
                 AppState.selectedRental = null;
             }
         } else if (!isGoingBack && this.currentScreen !== screenId) {
@@ -258,17 +260,179 @@ class AppController {
         }
     }
 
-    showDialog(message, title = 'Alert', icon = 'warning') {
+    /**
+     * Show a brief, non-blocking toast notification.
+     * @param {string} message  - Text to display.
+     * @param {'info'|'warning'|'error'} type - Visual style.
+     * @param {number} duration - Auto-dismiss after this many ms (default 4000).
+     */
+    showToast(message, type = 'info', duration = 4000) {
+        // Reuse or create a dedicated toast container
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = [
+                'position:fixed', 'bottom:32px', 'left:50%',
+                'transform:translateX(-50%)', 'z-index:9999',
+                'display:flex', 'flex-direction:column', 'align-items:center',
+                'gap:10px', 'pointer-events:none',
+            ].join(';');
+            document.body.appendChild(container);
+        }
+
+        const colorMap = {
+            info:    { bg: '#1e40af', border: '#3b82f6', icon: 'info' },
+            warning: { bg: '#92400e', border: '#f59e0b', icon: 'warning_amber' },
+            error:   { bg: '#7f1d1d', border: '#ef4444', icon: 'error' },
+        };
+        const { bg, border, icon } = colorMap[type] || colorMap.info;
+
+        const toast = document.createElement('div');
+        toast.style.cssText = [
+            `background:${bg}`, `border:2px solid ${border}`,
+            'color:#fff', 'border-radius:12px',
+            'padding:14px 22px', 'font-size:15px', 'font-weight:600',
+            'display:flex', 'align-items:center', 'gap:10px',
+            'box-shadow:0 4px 24px rgba(0,0,0,0.4)',
+            'opacity:0', 'transition:opacity 0.3s ease',
+            'pointer-events:none', 'max-width:360px', 'text-align:center',
+        ].join(';');
+        toast.innerHTML = `<span class="material-icons-round" style="font-size:20px">${icon}</span>${message}`;
+
+        container.appendChild(toast);
+
+        // Fade in
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => { toast.style.opacity = '1'; });
+        });
+
+        // Auto-dismiss
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 350);
+        }, duration);
+    }
+
+    /** Show the "no receipt paper" popup dialog. */
+    showNoPaperDialog() {
+        const overlay = document.getElementById('no-paper-dialog');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            // Force reflow so the CSS transition fires
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    /** Dismiss the "no receipt paper" popup dialog. */
+    hideNoPaperDialog() {
+        const overlay = document.getElementById('no-paper-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                if (!overlay.classList.contains('active')) {
+                    overlay.style.display = 'none';
+                }
+            }, 250);
+        }
+    }
+
+    showDialog(message, title = 'Alert', type = 'warning', buttonText = 'OK', onConfirm = null) {
         const overlay = document.getElementById('global-dialog');
         if (overlay) {
             const msgEl = document.getElementById('global-dialog-message');
             const titleEl = document.getElementById('global-dialog-title');
             const iconEl = document.getElementById('global-dialog-icon');
-            if (msgEl) msgEl.innerText = message;
+            const boxEl = document.querySelector('#global-dialog .global-dialog-box');
+            const btnEl = document.getElementById('global-dialog-ok-btn');
+            
+            if (msgEl) msgEl.innerHTML = message; // Use innerHTML to support formatted text
             if (titleEl) titleEl.innerText = title;
-            if (iconEl) iconEl.innerText = icon;
+            
+            // Icon mapping based on type
+            const iconMap = {
+                success: 'check_circle',
+                error: 'error',
+                warning: 'warning',
+                info: 'info',
+                question: 'help_outline',
+                coins: 'savings',
+                payment: 'payments'
+            };
+            
+            const iconName = iconMap[type] || 'warning';
+            
+            if (iconEl) {
+                iconEl.innerText = iconName;
+                // Remove all color classes first
+                iconEl.classList.remove('success', 'error', 'warning', 'info', 'question', 'coins', 'payment');
+                // Apply specific color class
+                iconEl.classList.add(type);
+            }
+            
+            // Apply background color classes to the dialog box
+            if (boxEl) {
+                boxEl.classList.remove('success-bg', 'error-bg', 'warning-bg', 'info-bg', 'question-bg', 'coins-bg', 'payment-bg');
+                boxEl.classList.add(`${type}-bg`);
+            }
+            
+            // Update button text and callback
+            if (btnEl) {
+                btnEl.innerHTML = `<span class="material-icons-round">check</span>${buttonText}`;
+                btnEl.onclick = () => {
+                    this.hideDialog();
+                    if (typeof onConfirm === 'function') onConfirm();
+                };
+            }
+            
             overlay.style.display = 'flex';
+            // Force reflow
+            overlay.offsetHeight;
             overlay.classList.add('active');
+        }
+    }
+
+    showConfirmDialog(message, title, icon, onConfirm) {
+        const overlay = document.getElementById('global-confirm-dialog');
+        if (overlay) {
+            const msgEl = document.getElementById('global-confirm-dialog-message');
+            const titleEl = document.getElementById('global-confirm-dialog-title');
+            const iconEl = document.getElementById('global-confirm-dialog-icon');
+            const confirmBtn = document.getElementById('global-confirm-dialog-btn');
+            const boxEl = document.querySelector('#global-confirm-dialog .global-dialog-box');
+            
+            if (msgEl) msgEl.innerText = message;
+            if (titleEl) titleEl.innerText = title || 'Confirm';
+            if (iconEl) {
+                iconEl.innerText = icon || 'help_outline';
+                iconEl.style.color = 'var(--primary-green)'; // Default positive color
+            }
+            
+            if (confirmBtn) {
+                // Clear old event listeners by cloning or just assigning onclick
+                confirmBtn.onclick = () => {
+                    this.hideConfirmDialog();
+                    if (typeof onConfirm === 'function') onConfirm();
+                };
+            }
+            
+            overlay.style.display = 'flex';
+            // Force reflow
+            overlay.offsetHeight;
+            overlay.classList.add('active');
+        }
+    }
+
+    hideConfirmDialog() {
+        const overlay = document.getElementById('global-confirm-dialog');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                if (!overlay.classList.contains('active')) {
+                    overlay.style.display = 'none';
+                }
+            }, 300);
         }
     }
 
@@ -277,6 +441,22 @@ class AppController {
         if (overlay) {
             overlay.classList.remove('active');
             overlay.style.display = 'none';
+        }
+
+        // If a screen requested post-retrieval/post-rental actions after the dialog,
+        // schedule showing those choice dialogs 5 seconds after the user dismisses the reminder.
+        if (this._postRetrievalAfterDialog) {
+            this._postRetrievalAfterDialog = false;
+            setTimeout(() => {
+                this.showPostRetrievalDialog();
+            }, 5000);
+        }
+
+        if (this._postRentalAfterDialog) {
+            this._postRentalAfterDialog = false;
+            setTimeout(() => {
+                this.showPostRentalDialog();
+            }, 5000);
         }
     }
 

@@ -3,7 +3,7 @@ const Stepper = {
     
     rentSteps: ['Login', 'Select', 'Type', 'Details', 'Payment'],
     retrieveSteps: ['Login', 'Rentals', 'Payment'],
-    adminSteps: ['Login', 'Select', 'Confirm', 'Unlock'],
+    adminSteps: ['Login', 'Verify', 'Select', 'Confirm', 'Unlock'],
     
     update(screenId, flow) {
         // Admin flow stepper
@@ -16,16 +16,17 @@ const Stepper = {
 
             let activeIdx = 0;
             if (screenId === 'admin-login') activeIdx = 0;
-            if (screenId === 'admin-select-compartment') activeIdx = 1;
-            if (screenId === 'admin-confirm-unlock') activeIdx = 2;
-            if (screenId === 'admin-unlock-steps') activeIdx = 3;
+            if (screenId === 'admin-verify-otp') activeIdx = 1;
+            if (screenId === 'admin-select-compartment') activeIdx = 2;
+            if (screenId === 'admin-confirm-unlock') activeIdx = 3;
+            if (screenId === 'admin-unlock-steps') activeIdx = 4;
 
             this._render(this.adminSteps, activeIdx, true);
             return;
         }
 
         // User flow stepper
-        if (screenId === 'dashboard' || screenId === 'welcome' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account') {
+        if (screenId === 'dashboard' || screenId === 'welcome' || screenId === 'create-account' || screenId === 'rental-confirmed' || screenId === 'retrieval-ready' || screenId === 'account' || screenId === 'locker-warning') {
             this.container.classList.add('hidden');
             return;
         }
@@ -43,7 +44,7 @@ const Stepper = {
         } else {
             if (screenId === 'retrieve-login') activeIdx = 0;
             if (screenId === 'active-rentals') activeIdx = 1;
-            if (screenId === 'retrieval-payment') activeIdx = 2;
+            if (screenId === 'retrieval-payment' || screenId === 'wallet-payment' || screenId === 'cash-payment') activeIdx = 2;
         }
 
         this._render(steps, activeIdx, false);

@@ -5,6 +5,8 @@ from flask import Blueprint, request, jsonify, current_app, Response, stream_wit
 import json
 import time
 from ..services.kiosk_security import require_kiosk_token
+from ..services import notification_service
+from ..config import Config
 
 hardware_bp = Blueprint('hardware', __name__)
 
@@ -45,8 +47,17 @@ def print_receipt():
     """Print a receipt via the thermal printer."""
     data = request.get_json()
     try:
-        current_app.hardware.print_receipt(data)
-        return jsonify({'success': True})
+        from ..hardware.thermal_printer import PrinterTimeoutError
+        try:
+            current_app.hardware.print_receipt(data)
+            return jsonify({'success': True})
+        except PrinterTimeoutError as te:
+            # Fire a Supabase notification so the admin knows paper is out.
+            notification_service.notify_no_receipt_paper(kiosk_id=Config.KIOSK_ID)
+            return jsonify({
+                'error': 'no_paper',
+                'message': str(te)
+            }), 408
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -130,8 +141,12 @@ def dispense_change():
     """Trigger the change dispenser to dispense a specific amount in ₱5 coins.
 
     Expects JSON body: { "amount": 15.0 }
-    The dispenser runs asynchronously — this endpoint returns immediately.
+    Checks inventory balance before dispensing and deducts after successful dispensing.
     """
+    from ..services.supabase_client import get_supabase
+    from ..config import Config
+    from datetime import datetime, timezone
+    
     data = request.get_json() or {}
     try:
         amount = float(data.get('amount', 0))
@@ -142,14 +157,76 @@ def dispense_change():
         return jsonify({'success': True, 'coins': 0, 'message': 'No change to dispense'})
 
     coins = int(amount // 5)
-    remainder = amount - (coins * 5)
+    dispensing_amount = coins * 5
+    remainder = amount - dispensing_amount
 
-    current_app.hardware.dispense_change(amount)
+    # Check inventory balance before dispensing
+    if dispensing_amount > 0:
+        try:
+            db = get_supabase()
+            
+            # Get device_id
+            device_res = db.table('devices').select('device_id').eq('device_code', Config.KIOSK_ID).execute()
+            if not device_res.data:
+                return jsonify({'error': 'Device not found', 'insufficient_inventory': True}), 404
+            
+            device_id = device_res.data[0]['device_id']
+            
+            # Get current inventory balance
+            inventory_res = db.table('device_inventory').select('change_amount').eq('device_id', device_id).execute()
+            if not inventory_res.data:
+                return jsonify({'error': 'Inventory not initialized', 'insufficient_inventory': True}), 404
+            
+            current_balance = float(inventory_res.data[0].get('change_amount', 0))
+            
+            # Check if sufficient inventory
+            if current_balance < dispensing_amount:
+                return jsonify({
+                    'error': f'Insufficient inventory. Available: ₱{current_balance:.2f}, Required: ₱{dispensing_amount:.2f}',
+                    'insufficient_inventory': True,
+                    'available_balance': current_balance,
+                    'required_amount': dispensing_amount,
+                    'wallet_credit': amount  # Full amount goes to wallet
+                }), 400
+                
+        except Exception as e:
+            print(f"Inventory check error: {e}")
+            return jsonify({'error': 'Inventory system unavailable', 'insufficient_inventory': True}), 500
+
+    # Function to update inventory after successful dispensing
+    def update_inventory_callback(coins_dispensed):
+        if coins_dispensed > 0:
+            dispensed_amount = coins_dispensed * 5
+            try:
+                db = get_supabase()
+                device_res = db.table('devices').select('device_id').eq('device_code', Config.KIOSK_ID).execute()
+                if device_res.data:
+                    device_id = device_res.data[0]['device_id']
+                    
+                    # Get current balance and deduct dispensed amount
+                    inventory_res = db.table('device_inventory').select('change_amount').eq('device_id', device_id).execute()
+                    if inventory_res.data:
+                        current_balance = float(inventory_res.data[0].get('change_amount', 0))
+                        new_balance = max(0, current_balance - dispensed_amount)
+                        
+                        update_data = {
+                            'change_amount': new_balance,
+                            'updated_at': datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        db.table('device_inventory').update(update_data).eq('device_id', device_id).execute()
+                        print(f"Inventory updated: dispensed ₱{dispensed_amount:.2f}, new balance: ₱{new_balance:.2f}")
+                        
+            except Exception as e:
+                print(f"Error updating inventory after dispensing: {e}")
+
+    # Trigger dispenser with callback to update inventory
+    current_app.hardware.dispense_change(amount, on_complete=update_inventory_callback)
 
     return jsonify({
         'success': True,
         'coins': coins,
-        'dispensing': coins * 5,
+        'dispensing': dispensing_amount,
         'wallet_credit': remainder,  # Any sub-₱5 remainder goes to wallet
         'message': f'Dispensing {coins} × ₱5 coin{"s" if coins != 1 else ""}'
     })

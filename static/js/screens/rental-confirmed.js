@@ -1,9 +1,11 @@
 window.RentalConfirmedScreen = {
+    _printed: false,  // guard: only print once per rental session
+
     async init() {
         const btn = document.getElementById('btn-open-compartment');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN COMPARTMENT';
         }
 
         document.getElementById('confirmed-compartment').innerText = AppState.selectedCompartment.code;
@@ -18,6 +20,12 @@ window.RentalConfirmedScreen = {
         }
 
         // Show/update loading while printing receipt (may already be showing from payment screen)
+        // Guard: only print once. init() can be called multiple times if the navigator
+        // re-initialises the screen (e.g. on navigation flicker), which would fire
+        // a duplicate print job with stale buffered data.
+        if (this._printed) return;
+        this._printed = true;
+        let noPaper = false;
         App.showLoading('Printing receipt...');
         try {
             const expiresAt = AppState.rentalType === 'fixed'
@@ -28,22 +36,41 @@ window.RentalConfirmedScreen = {
             await Api.printReceipt({
                 type: 'rental',
                 compartment_code: AppState.selectedCompartment.code,
-                module: AppState.selectedCompartment.module,
-                locker_name: `${AppState.selectedCompartment.size ? AppState.selectedCompartment.size.charAt(0).toUpperCase() + AppState.selectedCompartment.size.slice(1) : ''} Locker (${AppState.selectedCompartment.code})`,
+                module: AppState.selectedCompartment.module === '1' ? 'M1' : AppState.selectedCompartment.module,
+                locker_name: `${AppState.selectedCompartment.size ? AppState.selectedCompartment.size.charAt(0).toUpperCase() + AppState.selectedCompartment.size.slice(1) : ''} Compartment (${AppState.selectedCompartment.code})`,
                 rental_type: AppState.rentalType === 'fixed' ? 'Fixed Duration' : 'Open Time',
                 duration: AppState.rentalType === 'fixed' ? `${AppState.durationHours} hours` : null,
                 expires_at: expiresAt,
                 total: AppState.totalDue,
                 payment_method: AppState.paymentMethod || 'None',
-                wallet_credit: AppState.walletCredit || 0
+                // Payment breakdown
+                amount_due: AppState.totalDue || 0,
+                amount_paid: AppState.paymentMethod === 'cash'
+                    ? (AppState.cashInserted || AppState.totalDue || 0)
+                    : (AppState.totalDue || 0),
+                // change_amount = gross overpayment (cashInserted - amountDue), never negative
+                change_amount: AppState.paymentMethod === 'cash'
+                    ? Math.max(0, (AppState.cashInserted || 0) - (AppState.totalDue || 0))
+                    : 0,
+                // wallet_credit = portion of change that was added to wallet by the backend
+                wallet_credit: AppState.cashWalletCredit || 0,
+                refund_amount: 0 // No refunds on rental
             });
         } catch (e) {
-            console.error("Printer error:", e);
-        } finally {
-            // Add a slight delay so the printing loading screen is visible long enough
-            setTimeout(() => {
+            if (e.code === 'no_paper') {
+                noPaper = true;
+                console.warn('Printer timeout — no receipt paper:', e);
                 App.hideLoading();
-            }, 2500);
+                App.showNoPaperDialog();
+            } else {
+                console.error('Printer error:', e);
+            }
+        } finally {
+            if (!noPaper) {
+                setTimeout(() => {
+                    App.hideLoading();
+                }, 2500);
+            }
         }
     },
 
@@ -51,23 +78,28 @@ window.RentalConfirmedScreen = {
         const btn = document.getElementById('btn-open-compartment');
         btn.disabled = true;
         btn.innerHTML = 'CONFIRMING...';
-        App.showLoading('Unlocking locker...');
+        App.showLoading('Unlocking compartment...');
 
         try {
             await Api.request(`/hardware/unlock/${AppState.selectedCompartment.code}`, {
                 method: 'POST',
                 body: JSON.stringify({ device_code: AppState.selectedCompartment.device_code })
             });
-            App.showLoading('Locker unlocked!');
-            setTimeout(() => {
-                App.hideLoading();
-                App.showPostRentalDialog();
-            }, 1200);
+            App.hideLoading();
+            this._printed = false; // reset for next session
+            // Navigate to the locker warning screen (security step before post-rental options)
+            AppState._lockerWarningFlow = 'rental';
+            App.navigate('locker-warning');
         } catch (e) {
             App.hideLoading();
-            alert(e.message);
+            App.showDialog(
+                e.message,
+                'Unlock Failed',
+                'error',
+                'OK'
+            );
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN COMPARTMENT';
         }
     }
 };

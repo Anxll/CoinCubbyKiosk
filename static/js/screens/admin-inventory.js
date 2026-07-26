@@ -1,6 +1,7 @@
 window.AdminInventoryScreen = {
     inputCoins: 0,
     COIN_VALUE: 5,
+    MAX_AMOUNT: 300, // Maximum inventory limit in pesos
     currentBalance: 0,
 
     init() {
@@ -11,6 +12,23 @@ window.AdminInventoryScreen = {
     },
 
     increment() {
+        const newAmount = (this.inputCoins + 1) * this.COIN_VALUE;
+        const totalAfterRefill = this.currentBalance + newAmount;
+        
+        if (totalAfterRefill > this.MAX_AMOUNT) {
+            if (App?.showDialog) {
+                App.showDialog(
+                    `Maximum inventory limit is ₱${this.MAX_AMOUNT}. Current balance: ₱${this.currentBalance.toFixed(2)}. You can only add ₱${(this.MAX_AMOUNT - this.currentBalance).toFixed(2)} more.`,
+                    'Inventory Limit Reached',
+                    'warning',
+                    'OK'
+                );
+            } else {
+                alert(`Maximum inventory limit is ₱${this.MAX_AMOUNT}. You cannot exceed this amount.`);
+            }
+            return;
+        }
+        
         if (this.inputCoins < 9999) {
             this.inputCoins++;
             this.updateDisplay();
@@ -125,14 +143,24 @@ window.AdminInventoryScreen = {
             this.updateDisplay();
             await this.fetchStatus(false);
             if (App?.showDialog) {
-                App.showDialog(`Successfully cashed out ₱${(res.cashed_out_amount || 0).toFixed(2)}.`, 'Inventory Cashout', 'check_circle');
+                App.showDialog(
+                    `Successfully cashed out ₱${(res.cashed_out_amount || 0).toFixed(2)}.`,
+                    'Cashout Successful',
+                    'success',
+                    'DONE'
+                );
             } else {
                 alert(`Successfully cashed out ₱${(res.cashed_out_amount || 0).toFixed(2)}.`);
             }
         } catch (e) {
             console.error('Error cashing out:', e);
             if (App?.showDialog) {
-                App.showDialog(`Cashout failed: ${e.message || 'Unknown error'}`, 'Inventory Cashout', 'warning');
+                App.showDialog(
+                    `Cashout failed: ${e.message || 'Unknown error'}`,
+                    'Cashout Failed',
+                    'error',
+                    'OK'
+                );
             } else {
                 alert(`Cashout failed: ${e.message || 'Unknown error'}`);
             }
@@ -146,6 +174,23 @@ window.AdminInventoryScreen = {
         if (this.inputCoins <= 0) return;
         
         const totalAmount = this.inputCoins * this.COIN_VALUE;
+        const totalAfterRefill = this.currentBalance + totalAmount;
+        
+        // Check if refill would exceed maximum
+        if (totalAfterRefill > this.MAX_AMOUNT) {
+            if (App?.showDialog) {
+                App.showDialog(
+                    `Cannot refill ₱${totalAmount.toFixed(2)}. This would exceed the maximum inventory limit of ₱${this.MAX_AMOUNT}. Current balance: ₱${this.currentBalance.toFixed(2)}.`,
+                    'Refill Exceeds Limit',
+                    'error',
+                    'OK'
+                );
+            } else {
+                alert(`Refill would exceed maximum inventory limit of ₱${this.MAX_AMOUNT}.`);
+            }
+            return;
+        }
+        
         const btnRefill = document.getElementById('btn-admin-refill');
         if (btnRefill) btnRefill.disabled = true;
         
@@ -165,14 +210,24 @@ window.AdminInventoryScreen = {
             this.updateDisplay();
             await this.fetchStatus(false);
             if (App?.showDialog) {
-                App.showDialog(`Successfully added ₱${totalAmount.toFixed(2)} to inventory!`, 'Inventory Updated', 'check_circle');
+                App.showDialog(
+                    `Successfully added ₱${totalAmount.toFixed(2)} to inventory!`,
+                    'Inventory Refilled',
+                    'success',
+                    'GREAT!'
+                );
             } else {
                 alert(`Successfully added ₱${totalAmount.toFixed(2)} to inventory!`);
             }
         } catch (e) {
             console.error("Error refilling:", e);
             if (App?.showDialog) {
-                App.showDialog("Network error while refilling: " + (e.message || "Unknown error"), 'Refill Failed', 'warning');
+                App.showDialog(
+                    "Network error while refilling: " + (e.message || "Unknown error"),
+                    'Refill Failed',
+                    'error',
+                    'OK'
+                );
             } else {
                 alert("Network error while refilling: " + (e.message || "Unknown error"));
             }

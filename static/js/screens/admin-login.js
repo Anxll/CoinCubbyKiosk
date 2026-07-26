@@ -69,7 +69,12 @@ window.AdminLoginScreen = {
 
     async submit() {
         if (this.userId.length !== 6 || this.pin.length !== 6) {
-            App.showDialog('Please enter your complete Admin ID and Password.', 'Admin Login');
+            App.showDialog(
+                'Please enter your complete Admin ID and Password.',
+                'Admin Login',
+                'warning',
+                'OK'
+            );
             return;
         }
 
@@ -93,7 +98,12 @@ window.AdminLoginScreen = {
             // Navigate to OTP verify screen
             App.navigate('admin-verify-otp');
         } catch (e) {
-            App.showDialog(e.message || 'Login failed. Please try again.', 'Admin Login');
+            App.showDialog(
+                e.message || 'Login failed. Please try again.',
+                'Admin Login Failed',
+                'error',
+                'TRY AGAIN'
+            );
         } finally {
             const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
             if (hideLoading) hideLoading.call(App);

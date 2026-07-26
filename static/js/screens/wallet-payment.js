@@ -32,24 +32,37 @@ window.WalletPaymentScreen = {
 
         try {
             if (AppState.flow === 'rent') {
-                await Api.createRental({
+                const res = await Api.createRental({
                     user_id: AppState.user.id,
                     compartment_id: AppState.selectedCompartment.id,
                     rental_type: 'fixed',
                     duration_hours: AppState.durationHours,
                     payment_method: 'wallet'
                 });
+                // Sync wallet balance so header / account screen reflect the deduction
+                if (typeof res.new_wallet_balance === 'number') {
+                    AppState.user.wallet_balance = res.new_wallet_balance;
+                }
                 // Keep loading active — rental-confirmed init() will hide it after printing receipt
                 App.navigate('rental-confirmed', { paymentMethod: 'wallet' });
             } else {
                 // Retrieval flow
                 const res = await Api.retrieveRental(AppState.selectedRental.id, 'wallet', AppState.user.id);
+                // Sync wallet balance so header / account screen reflect the deduction
+                if (typeof res.new_wallet_balance === 'number') {
+                    AppState.user.wallet_balance = res.new_wallet_balance;
+                }
                 // Keep loading active — retrieval-ready init() will hide it after printing receipt
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
             App.hideLoading();
-            alert(e.message);
+            App.showDialog(
+                e.message,
+                'Payment Failed',
+                'error',
+                'TRY AGAIN'
+            );
             btn.disabled = false;
         }
     }

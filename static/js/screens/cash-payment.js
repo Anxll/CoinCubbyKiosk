@@ -25,6 +25,19 @@ window.CashPaymentScreen = {
         document.getElementById('cash-processing-wrap').classList.add('hidden');
         document.getElementById('btn-cash-cancel').classList.remove('hidden');
 
+        const coinsBtn = document.getElementById('btn-change-coins');
+        const walletBtn = document.getElementById('btn-change-wallet');
+        if (coinsBtn) {
+            coinsBtn.style.display = 'flex';
+            coinsBtn.style.flex = '1';
+            coinsBtn.style.maxWidth = '240px';
+        }
+        if (walletBtn) {
+            walletBtn.style.display = 'flex';
+            walletBtn.style.flex = '1';
+            walletBtn.style.maxWidth = '240px';
+        }
+
         const hintEl = document.querySelector('.cash-hint');
         if (hintEl) {
             hintEl.innerText = "Insert coins or bills into the machine";
@@ -74,7 +87,12 @@ window.CashPaymentScreen = {
             await Api.startCash(due);
             this.startStream();
         } catch (e) {
-            alert('Hardware Error: ' + e.message);
+            App.showDialog(
+                'Hardware Error: ' + e.message,
+                'Cash Acceptor Error',
+                'error',
+                'OK'
+            );
         }
 
         // Make the header back button run the same cleanup as cancel
@@ -132,13 +150,49 @@ window.CashPaymentScreen = {
                 document.getElementById('cash-countdown-wrap').classList.add('hidden');
 
                 if (overpayment > 0) {
-                    // Overpayment: show choices
+                    // Overpayment: show choices (hide coins option if less than ₱20)
                     document.getElementById('change-amount-label').innerText = `₱${overpayment.toFixed(2)}`;
+                    
+                    // Show/hide coins option based on amount
+                    const coinsBtn = document.getElementById('btn-change-coins');
+                    const walletBtn = document.getElementById('btn-change-wallet');
+                    
+                    if (overpayment < 20) {
+                        // Less than ₱20 - show both buttons, but coins will show popup
+                        coinsBtn.style.display = 'flex';
+                        walletBtn.style.flex = '1';
+                        walletBtn.style.maxWidth = '240px';
+                        
+                        // Check if inventory is insufficient from payment method warning
+                        if (AppState.insufficientInventory) {
+                            coinsBtn.disabled = true;
+                        } else {
+                            coinsBtn.disabled = false;
+                        }
+                        
+                        if (hintEl) {
+                            hintEl.innerHTML = `Payment complete. <strong class="text-orange">Select change option</strong> below.`;
+                        }
+                    } else {
+                        // ₱20 or more - show both options
+                        coinsBtn.style.display = 'flex';
+                        walletBtn.style.flex = '1';
+                        walletBtn.style.maxWidth = '240px';
+                        
+                        // Check if inventory is insufficient from payment method warning  
+                        if (AppState.insufficientInventory) {
+                            coinsBtn.disabled = true;
+                        } else {
+                            coinsBtn.disabled = false;
+                        }
+                        
+                        if (hintEl) {
+                            hintEl.innerHTML = `Payment complete. <strong class="text-orange">Select change option</strong> below.`;
+                        }
+                    }
+                    
                     document.getElementById('change-choice-wrap').classList.remove('hidden');
                     document.getElementById('cash-continue-wrap').classList.add('hidden');
-                    if (hintEl) {
-                        hintEl.innerHTML = `Payment complete. <strong class="text-orange">Select change option</strong> below.`;
-                    }
                 } else {
                     // Exact payment: show continue button
                     document.getElementById('cash-continue-wrap').classList.remove('hidden');
@@ -176,12 +230,27 @@ window.CashPaymentScreen = {
     async chooseCoins() {
         const overpayment = AppState.cashWalletCredit || 0;
         
+        // Check if overpayment is less than ₱20
+        if (overpayment < 20) {
+            if (App.showDialog) {
+                App.showDialog(
+                    "Change amount is less than ₱20. Minimum coin dispensing amount is ₱20. Please choose 'Add to Wallet' instead.",
+                    "Minimum Amount Required",
+                    "coins",
+                    "GOT IT"
+                );
+            } else {
+                alert("Change amount is less than ₱20. Please choose 'Add to Wallet' instead.");
+            }
+            return;
+        }
+        
         // Hide options, show processing
         document.getElementById('change-choice-wrap').classList.add('hidden');
         const procWrap = document.getElementById('cash-processing-wrap');
         procWrap.classList.remove('hidden');
-        document.getElementById('cash-processing-title').innerText = "Dispensing change...";
-        document.getElementById('cash-processing-subtitle').innerText = `Dispensing ₱${(Math.floor(overpayment / 5) * 5).toFixed(2)} in ₱5 coins. Please wait...`;
+        document.getElementById('cash-processing-title').innerText = "Checking inventory...";
+        document.getElementById('cash-processing-subtitle').innerText = "Verifying coin availability. Please wait...";
 
         let walletCreditRemainder = 0;
         try {
@@ -189,11 +258,39 @@ window.CashPaymentScreen = {
                 method: 'POST',
                 body: JSON.stringify({ amount: overpayment })
             });
+            // Success - coins dispensed
             walletCreditRemainder = Number(res.wallet_credit || 0);
+            document.getElementById('cash-processing-title').innerText = "Dispensing change...";
+            document.getElementById('cash-processing-subtitle').innerText = `Dispensing ₱${(Math.floor(overpayment / 5) * 5).toFixed(2)} in ₱5 coins. Please wait...`;
         } catch (err) {
-            console.error("Change dispenser error, falling back to wallet credit:", err);
+            console.error("Change dispenser error:", err);
+
+            const insufficientInventory = (err.data && err.data.insufficient_inventory)
+                || (err.data && typeof err.data.error === 'string' && err.data.error.toLowerCase().includes('insufficient'))
+                || (/insufficient.*inventory/i).test(err.message || '');
+
+            if (insufficientInventory) {
+                procWrap.classList.add('hidden');
+                document.getElementById('change-choice-wrap').classList.remove('hidden');
+
+                if (App.showDialog) {
+                    App.showDialog(
+                        "Not enough coins to give change. Any excess payment will be added to your wallet.",
+                        "Insufficient Coin Inventory",
+                        "coins",
+                        "UNDERSTOOD"
+                    );
+                } else {
+                    alert("Not enough coins to give change. Any excess payment will be added to your wallet.");
+                }
+                return;
+            }
+
+            // Other error - fallback to wallet
             walletCreditRemainder = overpayment;
-            alert("Change dispenser issue. Remaining change has been credited to your wallet balance.");
+            document.getElementById('cash-processing-title').innerText = "Dispenser unavailable";
+            document.getElementById('cash-processing-subtitle').innerText = "Change has been credited to your wallet balance.";
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
         await this.processSuccess(walletCreditRemainder);
@@ -249,6 +346,7 @@ window.CashPaymentScreen = {
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
+                AppState.cashInserted = finalCashInserted;  // store for receipt
                 AppState.cashWalletCredit = Number(res.wallet_credit || 0);
                 App.navigate('rental-confirmed', { paymentMethod: 'cash' });
             } else {
@@ -261,12 +359,18 @@ window.CashPaymentScreen = {
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
+                AppState.amountPaid = finalCashInserted;  // store for receipt
                 AppState.cashWalletCredit = Number(res.wallet_credit || 0);
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
             App.hideLoading();
-            alert(e.message);
+            App.showDialog(
+                e.message,
+                'Payment Error',
+                'error',
+                'OK'
+            );
             // In case of error, show cancel button and restore previous state
             document.getElementById('btn-cash-cancel').classList.remove('hidden');
             document.getElementById('cash-processing-wrap').classList.add('hidden');

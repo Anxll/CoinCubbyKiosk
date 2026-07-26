@@ -87,7 +87,12 @@ window.RetrieveLoginScreen = {
 
     async submit() {
         if (this.userId.length !== 6 || this.pin.length !== 6) {
-            alert('Please enter complete User ID and Password.');
+            App.showDialog(
+                'Please enter your complete User ID and Password.',
+                'Login Required',
+                'warning',
+                'OK'
+            );
             return;
         }
         
@@ -99,11 +104,16 @@ window.RetrieveLoginScreen = {
             const res = await Api.login(this.userId, this.pin);
             btn.disabled = false;
             // Keep loading active — active-rentals init() will update and hide it
-            App.navigate('active-rentals', { user: res.user });
+            App.navigate('active-rentals', { user: res.user, flow: 'retrieve' });
         } catch (e) {
             App.hideLoading();
             btn.disabled = false;
-            alert(e.message);
+            App.showDialog(
+                e.message || 'Invalid credentials. Please try again.',
+                'Login Failed',
+                'error',
+                'TRY AGAIN'
+            );
         }
     }
 };

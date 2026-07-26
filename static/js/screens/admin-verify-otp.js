@@ -72,7 +72,12 @@ window.AdminVerifyOtpScreen = {
             this.startTimer();
         } catch (e) {
             console.error(e);
-            App.showDialog('Failed to resend OTP: ' + (e.message || e), 'Resend Failed');
+            App.showDialog(
+                'Failed to resend OTP: ' + (e.message || e),
+                'Resend Failed',
+                'error',
+                'OK'
+            );
         } finally {
             const hideLoading = App?.hideAdminLoading ?? App?.hideLoading;
             if (hideLoading) hideLoading.call(App);
@@ -107,7 +112,12 @@ window.AdminVerifyOtpScreen = {
 
     async submit() {
         if (this.otp.length !== 6) {
-            App.showDialog('Please enter the 6-digit Verification PIN.', 'Verification Required');
+            App.showDialog(
+                'Please enter the 6-digit Verification PIN.',
+                'Verification Required',
+                'warning',
+                'OK'
+            );
             return;
         }
 
@@ -143,7 +153,12 @@ window.AdminVerifyOtpScreen = {
 
             App.navigate('admin-dashboard');
         } catch (e) {
-            App.showDialog(e.message || 'Verification failed.', 'Verification Failed');
+            App.showDialog(
+                e.message || 'Verification failed.',
+                'Verification Failed',
+                'error',
+                'TRY AGAIN'
+            );
             this.otp = '';
             this._renderBoxes();
         } finally {

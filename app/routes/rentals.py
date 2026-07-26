@@ -4,7 +4,7 @@ Rental management routes — create, retrieve, list active, pricing.
 from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timezone, timedelta
 from ..services.supabase_client import get_supabase
-from ..services.rental_service import calculate_fixed_rental_fee, calculate_open_time_charges, calculate_overdue_charges
+from ..services.rental_service import calculate_fixed_rental_fee, calculate_open_time_charges, calculate_overdue_charges, calculate_fixed_duration_refund
 from ..services.payment_service import process_wallet_payment, record_cash_payment, process_retrieval_payment
 from ..config import Config
 from ..services.kiosk_security import require_kiosk_token
@@ -124,11 +124,14 @@ def create_rental():
         transaction = result.data[0]
 
         # Process payment for fixed duration
+        total_amount = 0
+        pay_result = {}
+        wallet_balance_before = None
+        cash_wallet_balance_before = None
+
         if rental_type == 'fixed':
             pricing = calculate_fixed_rental_fee(duration_hours, rate_per_hour)
             total_amount = pricing['total']
-            wallet_balance_before = None
-            cash_wallet_balance_before = None
             
             if payment_method == 'wallet':
                 wallet_lookup = db.table('wallets').select('balance').eq('customer_id', user_id).execute()
@@ -164,12 +167,22 @@ def create_rental():
                 db.table('transactions').delete().eq('transaction_id', transaction['transaction_id']).execute()
             return jsonify({'error': f'Unable to finalize rental: {e}'}), 500
 
+        # Determine the updated wallet balance to return to the frontend so AppState stays in sync.
+        # Wallet payments: pay_result['new_balance'] is the post-deduction balance.
+        # Cash payments:   pay_result['new_wallet_balance'] holds any credited overpayment balance.
+        if rental_type == 'fixed' and payment_method == 'wallet':
+            new_wallet_balance = pay_result.get('new_balance')
+        elif rental_type == 'fixed' and payment_method == 'cash':
+            new_wallet_balance = pay_result.get('new_wallet_balance')
+        else:
+            new_wallet_balance = None
+
         return jsonify({
             'success': True,
             'amount_charged': total_amount if rental_type == 'fixed' else 0,
             'amount_paid': pay_result.get('amount_paid') if rental_type == 'fixed' and payment_method == 'cash' else total_amount if rental_type == 'fixed' else 0,
             'wallet_credit': pay_result.get('wallet_credit', 0) if rental_type == 'fixed' and payment_method == 'cash' else 0,
-            'new_wallet_balance': pay_result.get('new_wallet_balance') if rental_type == 'fixed' and payment_method == 'cash' else None,
+            'new_wallet_balance': new_wallet_balance,
             'rental': {
                 'id': transaction['transaction_id'],
                 'compartment_code': comp.data['locker_number'],
@@ -280,6 +293,8 @@ def retrieve_rental(rental_id):
             return jsonify({'error': 'Rental does not belong to this device'}), 403
 
         amount_due = 0
+        refund_amount = 0
+        refund_calc = None
         now = datetime.now(timezone.utc)
         rate_res = db.table('rates').select('price_per_hour').eq('size_type_id', rental['lockers']['size_type_id']).execute() if rental.get('lockers') else None
         if not rate_res or not rate_res.data:
@@ -291,12 +306,22 @@ def retrieve_rental(rental_id):
 
         if rental_type == 'fixed' and rental.get('end_time'):
             expires = datetime.fromisoformat(rental['end_time'].replace('Z', '+00:00'))
+            duration_hours = rental['duration_minutes'] // 60 if rental['duration_minutes'] else 0
+            
             if now > expires:
+                # Overdue - calculate additional charges
                 charges = calculate_overdue_charges(rental['end_time'], rate)
                 amount_due = charges['total']
+                refund_amount = 0  # No refund when overdue
+            else:
+                # Early retrieval - calculate refund for unused time
+                refund_calc = calculate_fixed_duration_refund(rental['start_time'], duration_hours, rate)
+                refund_amount = refund_calc['refund_amount']
+                amount_due = 0  # No additional charges for early retrieval
         elif rental_type == 'open_time':
             charges = calculate_open_time_charges(rental['start_time'], rate)
             amount_due = charges['total']
+            refund_amount = 0
 
         # Process payment if there are charges
         if amount_due > 0 and already_paid:
@@ -323,6 +348,13 @@ def retrieve_rental(rental_id):
                 'duration_minutes': charges['elapsed_minutes']
             }).eq('transaction_id', rental_id).execute()
 
+        # Process refund for early fixed-duration retrieval
+        if refund_amount > 0:
+            from ..services.payment_service import _credit_wallet
+            credit_res = _credit_wallet(rental['customer_id'], refund_amount)
+            if not credit_res.get('success'):
+                return jsonify({'error': f"Failed to process refund: {credit_res.get('error')}"}), 500
+
         compartment_code = rental['lockers']['locker_number']
 
         # Mark rental as completed and free the locker.
@@ -333,13 +365,28 @@ def retrieve_rental(rental_id):
         }).eq('transaction_id', rental_id).execute()
         db.table('lockers').update({'status': 'Available'}).eq('locker_id', rental['lockers']['locker_id']).execute()
 
+        # Determine the updated wallet balance to return so AppState stays in sync.
+        # Wallet payments: pay_result['new_balance'] is the post-deduction balance.
+        # Cash payments:   pay_result['new_wallet_balance'] holds any overpayment-credited balance.
+        # Refund (early retrieval, amount_due == 0): credit_res['new_balance'] after wallet credit.
+        if amount_due > 0 and payment_method == 'wallet':
+            retrieval_new_wallet_balance = pay_result.get('new_balance')
+        elif amount_due > 0 and payment_method == 'cash':
+            retrieval_new_wallet_balance = pay_result.get('new_wallet_balance')
+        elif refund_amount > 0:
+            retrieval_new_wallet_balance = credit_res.get('new_balance')
+        else:
+            retrieval_new_wallet_balance = None
+
         return jsonify({
             'success': True,
             'compartment_code': compartment_code,
             'amount_charged': amount_due,
             'amount_paid': pay_result.get('amount_paid') if amount_due > 0 and payment_method == 'cash' else amount_due,
             'wallet_credit': pay_result.get('wallet_credit', 0) if amount_due > 0 and payment_method == 'cash' else 0,
-            'new_wallet_balance': pay_result.get('new_wallet_balance') if amount_due > 0 and payment_method == 'cash' else None
+            'new_wallet_balance': retrieval_new_wallet_balance,
+            'refund_amount': refund_amount,
+            'refund_details': refund_calc if refund_amount > 0 else None
         })
 
     except Exception as e:
@@ -365,9 +412,14 @@ def get_compartment_active_rental(compartment_id):
         customer = rental.get('customers') or {}
         rental_type = 'fixed' if rental.get('duration_minutes') else 'open_time'
 
-        # Sum up all payments recorded for this transaction
-        payments_res = db.table('payments').select('amount').eq('transaction_id', rental['transaction_id']).execute()
-        amount_paid = sum(float(p['amount']) for p in payments_res.data) if payments_res.data else 0.0
+        # Sum up all payments recorded for this transaction.
+        # For cash payments, `amount` includes the overpayment that was already credited
+        # to the wallet as `change_amount`, so we subtract it to get the net amount paid.
+        payments_res = db.table('payments').select('amount, change_amount').eq('transaction_id', rental['transaction_id']).execute()
+        amount_paid = sum(
+            float(p['amount']) - float(p.get('change_amount') or 0)
+            for p in payments_res.data
+        ) if payments_res.data else 0.0
 
         return jsonify({
             'rental': {
@@ -379,6 +431,49 @@ def get_compartment_active_rental(compartment_id):
                 'start_time': rental['start_time'],
                 'amount_paid': amount_paid,
             }
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@rentals_bp.route('/<rental_id>/refund-preview', methods=['GET'])
+@require_kiosk_token
+def get_refund_preview(rental_id):
+    """Get refund calculation preview for fixed-duration rental without processing it."""
+    try:
+        db = get_supabase()
+        result = db.table('transactions').select('*, lockers(size_type_id)').eq('transaction_id', rental_id).single().execute()
+        rental = result.data
+
+        if not rental or rental['status'] != 'Active':
+            return jsonify({'error': 'Rental not found or already retrieved'}), 404
+
+        rental_type = 'fixed' if rental.get('duration_minutes') else 'open_time'
+        
+        if rental_type != 'fixed':
+            return jsonify({'refund_details': None})
+
+        # Get rate
+        rate_res = db.table('rates').select('price_per_hour').eq('size_type_id', rental['lockers']['size_type_id']).execute()
+        if not rate_res.data:
+            return jsonify({'error': 'Rate not configured'}), 500
+        
+        rate = float(rate_res.data[0]['price_per_hour'])
+        duration_hours = rental['duration_minutes'] // 60 if rental['duration_minutes'] else 0
+        
+        # Check if rental has expired (no refund for overdue)
+        now = datetime.now(timezone.utc)
+        expires = datetime.fromisoformat(rental['end_time'].replace('Z', '+00:00')) if rental.get('end_time') else None
+        
+        if expires and now > expires:
+            return jsonify({'refund_details': None})  # No refund for overdue
+        
+        # Calculate refund
+        refund_calc = calculate_fixed_duration_refund(rental['start_time'], duration_hours, rate)
+        
+        return jsonify({
+            'refund_details': refund_calc if refund_calc['refund_amount'] > 0 else None
         })
 
     except Exception as e:
@@ -414,10 +509,16 @@ def emergency_unlock(compartment_id):
             compartment_code = locker.get('locker_number')
             device_code = locker.get('module_id')
 
-            # Find how much was paid in payments table
-            payments_res = db.table('payments').select('amount').eq('transaction_id', transaction_id).execute()
+            # Find the net amount eligible for refund.
+            # For cash payments, `amount` = cash inserted (amount_due + overpayment).
+            # The overpayment (`change_amount`) was already sent to the wallet at payment
+            # time, so only the net amount_due (amount - change_amount) should be refunded.
+            payments_res = db.table('payments').select('amount, change_amount').eq('transaction_id', transaction_id).execute()
             if payments_res.data:
-                refunded_amount = sum(float(p['amount']) for p in payments_res.data)
+                refunded_amount = sum(
+                    float(p['amount']) - float(p.get('change_amount') or 0)
+                    for p in payments_res.data
+                )
 
             # If there's an amount to refund, credit the user's wallet
             if refunded_amount > 0:

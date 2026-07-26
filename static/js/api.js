@@ -17,9 +17,18 @@ class ApiClient {
                 }
             });
 
-            const data = await response.json();
+            let data = null;
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+
             if (!response.ok) {
-                throw new Error(data.error || 'API Request Failed');
+                const error = new Error((data && data.error) || 'API Request Failed');
+                error.status = response.status;
+                error.data = data;
+                throw error;
             }
             return data;
         } catch (error) {
@@ -80,10 +89,47 @@ class ApiClient {
     }
 
     static async printReceipt(data) {
-        return this.request('/hardware/print-receipt', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        // The thermal printer blocks indefinitely when out of paper.
+        // The server enforces a 15s timeout and returns HTTP 408 / error:'no_paper'.
+        // We add a 8s client-side AbortController as a last-resort safety net.
+        const RECEIPT_TIMEOUT_MS = 8_000;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), RECEIPT_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(`${API_BASE}/hardware/print-receipt`, {
+                method: 'POST',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Kiosk-Token': this.getKioskToken(),
+                },
+                body: JSON.stringify(data),
+            });
+
+            clearTimeout(timer);
+
+            let payload = null;
+            try { payload = await response.json(); } catch { /* no body */ }
+
+            if (!response.ok) {
+                if (payload && payload.error === 'no_paper') {
+                    const err = new Error('no_paper');
+                    err.code = 'no_paper';
+                    throw err;
+                }
+                throw new Error((payload && payload.error) || 'Print request failed');
+            }
+            return payload;
+        } catch (err) {
+            clearTimeout(timer);
+            if (err.name === 'AbortError') {
+                const timeoutErr = new Error('no_paper');
+                timeoutErr.code = 'no_paper';
+                throw timeoutErr;
+            }
+            throw err;
+        }
     }
 
     static async startCash(targetAmount) {

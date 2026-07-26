@@ -14,12 +14,27 @@ window.CompartmentScreen = {
         App.showLoading('Loading compartments...');
         try {
             const moduleName = this.modules[this.currentModuleIdx];
-            document.getElementById('module-circle-id').innerText = moduleName;
+
             document.getElementById('module-name-title').innerText = `Module ${moduleName}`;
             document.getElementById('module-page').innerText = `${this.currentModuleIdx + 1} / ${this.modules.length}`;
             
-            document.getElementById('btn-prev-module').disabled = this.currentModuleIdx === 0;
-            document.getElementById('btn-next-module').disabled = this.currentModuleIdx === this.modules.length - 1;
+            const isFirst = this.currentModuleIdx === 0;
+            const isLast = this.currentModuleIdx === this.modules.length - 1;
+            
+            // Only update arrow buttons (footer buttons removed)
+            const arrowPrev = document.getElementById('arrow-prev-module');
+            const arrowNext = document.getElementById('arrow-next-module');
+            if (arrowPrev) arrowPrev.disabled = isFirst;
+            if (arrowNext) arrowNext.disabled = isLast;
+
+            // Change card background class
+            const card = document.getElementById('module-card');
+            if (card) {
+                // Remove existing module-bg-* classes
+                card.className = 'comp-card-wrapper';
+                // Add the new one (1-indexed)
+                card.classList.add(`module-bg-${this.currentModuleIdx + 1}`);
+            }
 
             const res = await Api.getCompartments(moduleName);
             this.compartments = res.compartments;
@@ -59,7 +74,7 @@ window.CompartmentScreen = {
             } else if (c.status === 'maintenance') {
                 cls = 'comp-new-maintenance';
                 dotCls = 'dot-maintenance';
-                icon = 'credit_card'; // Matches the user's yellow reference
+                icon = 'build'; 
             }
             
             if (AppState.selectedCompartment && String(AppState.selectedCompartment.id) === String(c.id)) {
@@ -106,7 +121,8 @@ window.CompartmentScreen = {
             App.showDialog(
                 `Compartment ${comp.code} is currently occupied. Please choose an available compartment.`,
                 'Compartment Occupied',
-                'lock'
+                'error',
+                'OK'
             );
             return;
         }
@@ -115,7 +131,8 @@ window.CompartmentScreen = {
             App.showDialog(
                 `Compartment ${comp.code} is under maintenance and cannot be rented at this time.`,
                 'Under Maintenance',
-                'build'
+                'warning',
+                'OK'
             );
             return;
         }

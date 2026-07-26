@@ -2,7 +2,7 @@ window.AdminUnlockStepsScreen = {
     steps: [
         {
             icon: 'search',
-            title: 'Locate the Locker',
+            title: 'Locate the Compartment',
             desc: 'Go to the physical module unit and find the compartment shown above.',
         },
         {
@@ -31,7 +31,7 @@ window.AdminUnlockStepsScreen = {
         const btn = document.getElementById('btn-admin-complete-unlock');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN COMPARTMENT';
         }
 
         this.completedSteps = new Set();
@@ -51,7 +51,7 @@ window.AdminUnlockStepsScreen = {
                 : `<div class="admin-step-number">${idx + 1}</div>`;
 
             html += `
-                <div class="admin-step-item ${statusCls}" id="admin-step-${idx}" onclick="AdminUnlockStepsScreen.toggleStep(${idx})">
+                <div class="admin-step-item ${statusCls}" id="admin-step-${idx}">
                     <div class="admin-step-left">
                         ${checkHtml}
                         <div class="admin-step-icon-wrap">
@@ -96,10 +96,14 @@ window.AdminUnlockStepsScreen = {
             const refund = res.refunded_amount || 0;
             const userCode = res.user_code || '—';
 
-            App.navigate('admin-unlock-done', {
-                adminUnlockRefund: refund,
-                adminUnlockUser: userCode,
-                adminUnlockCompartment: comp.code
+            // Navigate to the locker-warning screen so admin sees the same
+            // "Compartment is Open — close the door" checklist as regular users.
+            App.navigate('locker-warning', {
+                _lockerWarningFlow: 'admin',
+                compartmentCode:    comp.code,
+                adminUnlockRefund:  refund,
+                adminUnlockUser:    userCode,
+                adminUnlockCompartment: comp.code,
             });
         } catch (e) {
             console.error('Emergency unlock error:', e);
@@ -107,7 +111,7 @@ window.AdminUnlockStepsScreen = {
         } finally {
             if (hideLoading) hideLoading.call(App);
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN LOCKER';
+            btn.innerHTML = '<span class="material-icons-round">lock_open</span> CONFIRM & OPEN COMPARTMENT';
         }
     }
 };

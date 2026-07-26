@@ -19,12 +19,25 @@ window.AdminSelectCompartmentScreen = {
 
         try {
             const moduleName = this.modules[this.currentModuleIdx];
-            document.getElementById('admin-module-circle-id').innerText = moduleName;
-            document.getElementById('admin-module-name-title').innerText = `Module ${moduleName}`;
+
+            document.getElementById('admin-module-name-title').innerHTML = `Module ${moduleName} <div style="font-size: 14px; font-weight: normal; color: var(--text-muted); margin-top: 4px;">Address: Ground Floor, Main Lobby</div><div style="font-size: 12px; font-weight: normal; color: var(--text-muted);">SN: CCK-2026-${moduleName.toString().padStart(4, '0')}</div>`;
             document.getElementById('admin-module-page').innerText = `${this.currentModuleIdx + 1} / ${this.modules.length}`;
 
-            document.getElementById('btn-admin-prev-module').disabled = this.currentModuleIdx === 0;
-            document.getElementById('btn-admin-next-module').disabled = this.currentModuleIdx === this.modules.length - 1;
+            const isFirst = this.currentModuleIdx === 0;
+            const isLast = this.currentModuleIdx === this.modules.length - 1;
+            
+            // Only update arrow buttons (footer buttons removed)
+            const arrowPrev = document.getElementById('admin-arrow-prev-module');
+            const arrowNext = document.getElementById('admin-arrow-next-module');
+            if (arrowPrev) arrowPrev.disabled = isFirst;
+            if (arrowNext) arrowNext.disabled = isLast;
+
+            // Change card background class
+            const card = document.getElementById('admin-module-card');
+            if (card) {
+                card.className = 'comp-card-wrapper';
+                card.classList.add(`module-bg-${this.currentModuleIdx + 1}`);
+            }
 
             const res = await Api.getCompartments(moduleName);
             this.compartments = res.compartments;
@@ -107,9 +120,33 @@ window.AdminSelectCompartmentScreen = {
         const comp = this.compartments.find(c => String(c.id) === String(id));
         if (!comp) return;
 
-        this.selectedCompartment = comp;
-        this.renderGrid();
-        document.getElementById('btn-admin-confirm-compartment').disabled = false;
+        if (comp.status === 'occupied' || comp.status === 'maintenance') {
+            let msg = '';
+            let icon = 'warning';
+            
+            if (comp.status === 'occupied') {
+                msg = `WARNING: Compartment ${comp.code} is currently OCCUPIED.\n\nAre you sure you want to force unlock it?`;
+            } else if (comp.status === 'maintenance') {
+                msg = `WARNING: Compartment ${comp.code} is under MAINTENANCE.\n\nAre you sure you want to force unlock it?`;
+            }
+
+            App.showConfirmDialog(
+                msg,
+                'Confirm Unlock Selection',
+                icon,
+                () => {
+                    this.selectedCompartment = comp;
+                    this.renderGrid();
+                    document.getElementById('btn-admin-confirm-compartment').disabled = false;
+                    this.confirm(); 
+                }
+            );
+        } else {
+            // Available compartments bypass the warning popup
+            this.selectedCompartment = comp;
+            this.renderGrid();
+            document.getElementById('btn-admin-confirm-compartment').disabled = false;
+        }
     },
 
     nextModule() {

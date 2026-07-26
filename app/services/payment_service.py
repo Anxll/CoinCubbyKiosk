@@ -34,7 +34,8 @@ def process_wallet_payment(user_id: str, amount: float, transaction_id: str, ses
         db.table('payments').insert({
             'transaction_id': transaction_id,
             'amount': amount,
-            'payment_method': 'Wallet'
+            'payment_method': 'Wallet',
+            'change_amount': 0.00  # No change for wallet payments
         }).execute()
     except Exception as e:
         db.table('wallets').update({'balance': current_balance}).eq('customer_id', user_id).execute()
@@ -104,7 +105,8 @@ def record_cash_payment(user_id: str, amount: float, transaction_id: str, sessio
         db.table('payments').insert({
             'transaction_id': transaction_id,
             'amount': amount_paid,
-            'payment_method': 'Cash'
+            'payment_method': 'Cash',
+            'change_amount': overpayment  # Store change amount
         }).execute()
     except Exception as e:
         # Payment record failed — log it but don't fail the overall transaction

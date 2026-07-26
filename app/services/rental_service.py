@@ -91,3 +91,46 @@ def calculate_overdue_charges(expires_at_str: str, rate_per_hour: float) -> dict
         'overdue_fee': overdue_fee,
         'total': overdue_fee
     }
+
+
+def calculate_fixed_duration_refund(started_at_str: str, duration_hours: int, rate_per_hour: float) -> dict:
+    """
+    Calculate refund for fixed-duration rental when retrieved early.
+    
+    Logic: User paid for X hours but only used Y hours.
+    Refund unused 30-minute blocks.
+    
+    Args:
+        started_at_str: When rental started (ISO string)
+        duration_hours: Paid duration in hours
+        rate_per_hour: Rate per hour
+    
+    Returns:
+        dict with refund details
+    """
+    started_at = datetime.fromisoformat(started_at_str.replace('Z', '+00:00'))
+    now = datetime.now(timezone.utc)
+    elapsed_minutes = (now - started_at).total_seconds() / 60
+    
+    # Calculate paid and used blocks (30-min increments)
+    paid_blocks = duration_hours * 2  # 2 blocks per hour
+    used_blocks = max(1, math.ceil(elapsed_minutes / 30))  # Minimum 1 block
+    
+    # Calculate refund
+    if used_blocks < paid_blocks:
+        unused_blocks = paid_blocks - used_blocks
+        refund_amount = unused_blocks * (rate_per_hour / 2)
+    else:
+        unused_blocks = 0
+        refund_amount = 0
+    
+    return {
+        'elapsed_hours': round(elapsed_minutes / 60, 4),
+        'elapsed_minutes': int(round(elapsed_minutes)),
+        'paid_blocks': paid_blocks,
+        'used_blocks': used_blocks,
+        'unused_blocks': unused_blocks,
+        'refund_amount': refund_amount,
+        'paid_amount': duration_hours * rate_per_hour,
+        'charged_amount': used_blocks * (rate_per_hour / 2)
+    }
