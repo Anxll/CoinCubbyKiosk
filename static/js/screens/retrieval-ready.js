@@ -29,6 +29,16 @@ window.RetrievalReadyScreen = {
         let noPaper = false;
         App.showLoading('Printing receipt...');
         try {
+            const amountDue = AppState.amountCharged || AppState.selectedRental?.outstanding || 0;
+            const amountPaid = AppState.paymentMethod === 'cash'
+                ? (AppState.amountPaid || amountDue)
+                : amountDue;
+            // Use the stored total change amount if available, otherwise calculate it
+            const changeAmount = AppState.paymentMethod === 'cash'
+                ? (AppState.totalChangeAmount !== undefined ? AppState.totalChangeAmount : Math.max(0, amountPaid - amountDue))
+                : 0;
+            const walletCredit = AppState.cashWalletCredit || 0;
+
             await Api.printReceipt({
                 type: 'retrieval',
                 compartment_code: AppState.compartmentCode,
@@ -38,20 +48,16 @@ window.RetrievalReadyScreen = {
                     : AppState.compartmentCode,
                 rental_type: AppState.selectedRental ? (AppState.selectedRental.rental_type === 'fixed' ? 'Fixed Duration' : 'Open Time') : 'Unknown',
                 started_at: AppState.selectedRental ? new Date(AppState.selectedRental.started_at).toLocaleString() : 'Unknown',
-                amount: AppState.amountCharged || 0,
+                amount: amountDue,
                 // Payment breakdown
-                amount_due: AppState.amountCharged || AppState.selectedRental?.outstanding || 0,
-                amount_paid: AppState.paymentMethod === 'cash'
-                    ? (AppState.amountPaid || AppState.amountCharged || 0)
-                    : (AppState.amountCharged || 0),
-                // change_amount = gross overpayment for cash only, never negative
-                change_amount: AppState.paymentMethod === 'cash'
-                    ? Math.max(0, (AppState.amountPaid || 0) - (AppState.amountCharged || 0))
-                    : 0,
-                // wallet_credit = portion of change credited to wallet by the backend
-                wallet_credit: AppState.cashWalletCredit || 0,
+                amount_due: amountDue,
+                amount_paid: amountPaid,
+                // change_amount = gross overpayment (total change before any dispensing)
+                change_amount: changeAmount,
+                // wallet_credit = portion of change that was added to wallet (after coins dispensed)
+                wallet_credit: walletCredit,
                 refund_amount: AppState.refundAmount || 0,
-                payment_method: AppState.paymentMethod || (AppState.amountCharged > 0 ? 'Unknown' : 'None')
+                payment_method: AppState.paymentMethod || (amountDue > 0 ? 'Unknown' : 'None')
             });
         } catch (e) {
             if (e.code === 'no_paper') {

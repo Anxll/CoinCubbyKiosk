@@ -33,6 +33,16 @@ window.RentalConfirmedScreen = {
                     .toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })
                 : null;
 
+            const amountDue = AppState.totalDue || 0;
+            const amountPaid = AppState.paymentMethod === 'cash'
+                ? (AppState.cashInserted || amountDue)
+                : amountDue;
+            // Use the stored total change amount if available, otherwise calculate it
+            const changeAmount = AppState.paymentMethod === 'cash'
+                ? (AppState.totalChangeAmount !== undefined ? AppState.totalChangeAmount : Math.max(0, amountPaid - amountDue))
+                : 0;
+            const walletCredit = AppState.cashWalletCredit || 0;
+
             await Api.printReceipt({
                 type: 'rental',
                 compartment_code: AppState.selectedCompartment.code,
@@ -41,19 +51,15 @@ window.RentalConfirmedScreen = {
                 rental_type: AppState.rentalType === 'fixed' ? 'Fixed Duration' : 'Open Time',
                 duration: AppState.rentalType === 'fixed' ? `${AppState.durationHours} hours` : null,
                 expires_at: expiresAt,
-                total: AppState.totalDue,
+                total: amountDue,
                 payment_method: AppState.paymentMethod || 'None',
                 // Payment breakdown
-                amount_due: AppState.totalDue || 0,
-                amount_paid: AppState.paymentMethod === 'cash'
-                    ? (AppState.cashInserted || AppState.totalDue || 0)
-                    : (AppState.totalDue || 0),
-                // change_amount = gross overpayment (cashInserted - amountDue), never negative
-                change_amount: AppState.paymentMethod === 'cash'
-                    ? Math.max(0, (AppState.cashInserted || 0) - (AppState.totalDue || 0))
-                    : 0,
-                // wallet_credit = portion of change that was added to wallet by the backend
-                wallet_credit: AppState.cashWalletCredit || 0,
+                amount_due: amountDue,
+                amount_paid: amountPaid,
+                // change_amount = gross overpayment (total change before any dispensing)
+                change_amount: changeAmount,
+                // wallet_credit = portion of change that was added to wallet (after coins dispensed)
+                wallet_credit: walletCredit,
                 refund_amount: 0 // No refunds on rental
             });
         } catch (e) {

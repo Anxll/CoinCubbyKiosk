@@ -20,7 +20,7 @@ window.AdminSelectCompartmentScreen = {
         try {
             const moduleName = this.modules[this.currentModuleIdx];
 
-            document.getElementById('admin-module-name-title').innerHTML = `Module ${moduleName} <div style="font-size: 14px; font-weight: normal; color: var(--text-muted); margin-top: 4px;">Address: Ground Floor, Main Lobby</div><div style="font-size: 12px; font-weight: normal; color: var(--text-muted);">SN: CCK-2026-${moduleName.toString().padStart(4, '0')}</div>`;
+            document.getElementById('admin-module-name-title').innerText = `Module ${moduleName}`;
             document.getElementById('admin-module-page').innerText = `${this.currentModuleIdx + 1} / ${this.modules.length}`;
 
             const isFirst = this.currentModuleIdx === 0;

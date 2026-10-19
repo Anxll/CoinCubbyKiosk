@@ -230,21 +230,6 @@ window.CashPaymentScreen = {
     async chooseCoins() {
         const overpayment = AppState.cashWalletCredit || 0;
         
-        // Check if overpayment is less than ₱20
-        if (overpayment < 20) {
-            if (App.showDialog) {
-                App.showDialog(
-                    "Change amount is less than ₱20. Minimum coin dispensing amount is ₱20. Please choose 'Add to Wallet' instead.",
-                    "Minimum Amount Required",
-                    "coins",
-                    "GOT IT"
-                );
-            } else {
-                alert("Change amount is less than ₱20. Please choose 'Add to Wallet' instead.");
-            }
-            return;
-        }
-        
         // Hide options, show processing
         document.getElementById('change-choice-wrap').classList.add('hidden');
         const procWrap = document.getElementById('cash-processing-wrap');
@@ -329,7 +314,9 @@ window.CashPaymentScreen = {
         App.showLoading('Processing payment...');
         try {
             AppState.paymentMethod = 'cash';
-            const finalCashInserted = AppState.totalDue + walletCreditRemainder;
+            // Store the ACTUAL amount inserted and the TOTAL overpayment
+            const actualCashInserted = AppState.cashInserted;
+            const totalOverpayment = Math.max(0, actualCashInserted - AppState.totalDue);
             
             this.cleanup();
             await Api.stopCash();
@@ -341,26 +328,30 @@ window.CashPaymentScreen = {
                     rental_type: 'fixed',
                     duration_hours: AppState.durationHours,
                     payment_method: 'cash',
-                    cash_inserted: finalCashInserted
+                    cash_inserted: actualCashInserted
                 });
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
-                AppState.cashInserted = finalCashInserted;  // store for receipt
-                AppState.cashWalletCredit = Number(res.wallet_credit || 0);
+                // Store receipt data:
+                AppState.cashInserted = actualCashInserted;  // actual amount paid
+                AppState.totalChangeAmount = totalOverpayment;  // total change (for display)
+                AppState.cashWalletCredit = walletCreditRemainder;  // portion to wallet after coins
                 App.navigate('rental-confirmed', { paymentMethod: 'cash' });
             } else {
                 const res = await Api.retrieveRental(
                     AppState.selectedRental.id,
                     'cash',
                     AppState.user.id,
-                    finalCashInserted
+                    actualCashInserted
                 );
                 if (typeof res.new_wallet_balance === 'number') {
                     AppState.user.wallet_balance = res.new_wallet_balance;
                 }
-                AppState.amountPaid = finalCashInserted;  // store for receipt
-                AppState.cashWalletCredit = Number(res.wallet_credit || 0);
+                // Store receipt data:
+                AppState.amountPaid = actualCashInserted;  // actual amount paid
+                AppState.totalChangeAmount = totalOverpayment;  // total change (for display)
+                AppState.cashWalletCredit = walletCreditRemainder;  // portion to wallet after coins
                 App.navigate('retrieval-ready', { amountCharged: res.amount_charged, compartmentCode: res.compartment_code });
             }
         } catch (e) {
